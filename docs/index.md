@@ -1,52 +1,23 @@
-# Documentación del Proyecto Docker Oracle WebLogic
+# poc-icbs
 
-Bienvenido a la documentación completa del proyecto Docker Oracle WebLogic con HAProxy y feature flags.
+Bienvenido a la documentación de poc-icbs.
 
-## 🚀 Inicio Rápido
+## Descripción
 
-Para iniciar todos los servicios:
+Este proyecto es parte del ecosistema IA-Ops Platform y está integrado con Backstage.
 
-```bash
-./manage-services.sh start
-```
+## Características
 
-## 📋 Servicios Disponibles
+- Integración con Backstage
+- Documentación automática con TechDocs
+- CI/CD automatizado
+- Monitoreo y observabilidad
 
-### WebLogic Servers
-- **WebLogic A**: http://localhost:7001/console
-- **WebLogic B**: http://localhost:7002/console
+## Enlaces útiles
 
-### HAProxy Load Balancer
-- **Load Balancer**: http://localhost:8083
-- **HAProxy Stats**: http://localhost:8404/stats
-- **HAProxy Admin**: http://localhost:8082
+- [Repositorio en GitHub](https://github.com/giovanemere/poc-icbs)
+- [Backstage](http://localhost:8080)
 
-### Base de Datos Oracle
-- **Oracle Database**: localhost:1521 (XE)
-- **Oracle EM Express**: https://localhost:5500/em
+## Soporte
 
-### Documentación
-- **Esta documentación**: http://localhost:8000
-
-## 🛠️ Comandos Útiles
-
-```bash
-# Ver estado de los servicios
-./manage-services.sh status
-
-# Ver logs en tiempo real
-./manage-services.sh logs --follow
-
-# Detener servicios
-./manage-services.sh stop
-
-# Actualizar HAProxy
-./manage-services.sh update-haproxy
-```
-
-## 📚 Más Información
-
-- [Primeros Pasos](getting-started.md)
-- [Arquitectura del Sistema](arquitectura.md)
-- [Configuración de HAProxy](haproxy.md)
-- [Despliegues Canary](canary-and-features.md)
+Para soporte y preguntas, por favor crea un issue en el repositorio de GitHub.

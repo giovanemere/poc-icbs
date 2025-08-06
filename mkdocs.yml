@@ -1,25 +1,25 @@
-site_name: WebLogic Oracle Documentation
-site_description: Docker WebLogic Oracle - Documentación Completa
-site_url: http://localhost:8000
+site_name: 'poc-icbs Documentation'
+site_description: 'Documentación del proyecto poc-icbs'
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Architecture: architecture.md
+  - API Reference: api.md
+  - Deployment: deployment.md
+
+plugins:
+  - techdocs-core
 
 theme:
   name: material
   palette:
     primary: blue
-    accent: orange
-
-nav:
-  - Inicio: index.md
-  - Arquitectura: arquitectura.md
-  - Guía de Despliegue: DEPLOYMENT_GUIDE.md
-  - Canary Deployment: CANARY_GUIDE.md
-  - HAProxy: haproxy.md
-  - Troubleshooting: TROUBLESHOOTING.md
-  - Plan de Implementación: plan-implementacion.md
-  - Seguimiento: seguimiento-progreso.md
+    accent: blue
 
 markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
   - toc:
       permalink: true
-  - codehilite
-  - admonition
