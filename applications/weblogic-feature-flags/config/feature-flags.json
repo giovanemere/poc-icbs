@@ -1,0 +1,20 @@
+{
+  "version": "1.1.0",
+  "features": {
+    "version_a_enabled": true,
+    "version_b_enabled": false,
+    "canary_deployment": true,
+    "health_monitoring": true,
+    "auto_failover": true
+  },
+  "environments": {
+    "development": {
+      "debug_mode": true,
+      "log_level": "DEBUG"
+    },
+    "production": {
+      "debug_mode": false,
+      "log_level": "INFO"
+    }
+  }
+}

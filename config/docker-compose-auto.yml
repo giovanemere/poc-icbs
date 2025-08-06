@@ -1,0 +1,158 @@
+version: '3.8'
+
+services:
+  weblogic-a:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        VERSION: A
+    image: weblogic-feature-flags:latest
+    container_name: weblogic-a
+    environment:
+      - ADMIN_PASSWORD=welcome1
+      - VERSION=A
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-a-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-a-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      - weblogic-network
+    ports:
+      - "7001:7001"
+    depends_on:
+      - orcldb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console/login/LoginForm.jsp"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  weblogic-b:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        VERSION: B
+    image: weblogic-feature-flags:latest
+    container_name: weblogic-b
+    environment:
+      - ADMIN_PASSWORD=welcome1
+      - VERSION=B
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-b-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-b-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      - weblogic-network
+    ports:
+      - "7002:7001"
+    depends_on:
+      - orcldb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console/login/LoginForm.jsp"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  haproxy:
+    build:
+      context: ../haproxy
+      dockerfile: Dockerfile
+    container_name: haproxy
+    ports:
+      - "8080:80"     # HTTP (cambiado de 80 a 8080)
+      - "8443:443"    # HTTPS (cambiado de 443 a 8443)
+      - "8404:8404"   # HAProxy Stats
+      - "8081:8081"   # API de administración
+      - "8082:8082"   # UI de administración
+    volumes:
+      - ../haproxy/config:/usr/local/etc/haproxy:z
+      - ../haproxy/scripts:/scripts:z
+      - ../haproxy/config/certs:/etc/ssl/certs:z
+    user: "0:0"  # Ejecutar como root para evitar problemas de permisos
+    networks:
+      - weblogic-network
+    depends_on:
+      weblogic-a:
+        condition: service_healthy
+      weblogic-b:
+        condition: service_healthy
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  # Servicio para actualizar automáticamente HAProxy
+  haproxy-updater:
+    image: alpine:latest
+    container_name: haproxy-updater
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ../scripts:/scripts:ro
+      - ../haproxy/config:/haproxy-config:rw
+    networks:
+      - weblogic-network
+    depends_on:
+      haproxy:
+        condition: service_started
+    command: >
+      sh -c "
+        apk add --no-cache docker-cli curl &&
+        sleep 10 &&
+        /scripts/auto-update-haproxy.sh &&
+        tail -f /dev/null
+      "
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  orcldb:
+    image: container-registry.oracle.com/database/express:latest
+    container_name: orcldb
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    environment:
+      - ORACLE_PWD=welcome1
+    volumes:
+      - db-oracle:/opt/oracle/oradata
+      - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
+      - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
+    networks:
+      - weblogic-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/welcome1@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  weblogic-network:
+    driver: bridge
+
+volumes:
+  db-oracle:
+    driver: local
+  weblogic-a-logs:
+    driver: local
+  weblogic-b-logs:
+    driver: local
+  weblogic-a-monitoring:
+    driver: local
+  weblogic-b-monitoring:
+    driver: local

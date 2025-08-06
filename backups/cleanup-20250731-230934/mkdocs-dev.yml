@@ -1,0 +1,123 @@
+site_name: Docker Oracle WebLogic - Documentación (DEV)
+site_description: Documentación completa para el proyecto Docker Oracle WebLogic con despliegues canary y feature flags - Entorno de Desarrollo
+site_author: ICBS Team
+site_url: http://localhost:8000
+
+# Repository
+repo_name: docker-for-oracle-weblogic
+repo_url: https://github.com/your-org/docker-for-oracle-weblogic
+edit_uri: edit/main/docs/
+
+# Configuration
+theme:
+  name: material
+  language: es
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Cambiar a modo oscuro
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Cambiar a modo claro
+  
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+    - toc.integrate
+
+# Plugins
+plugins:
+  - search:
+      lang: es
+  - mermaid2:
+      arguments:
+        theme: |
+          ^(JSON.parse(__md_get("__palette").index == 1)) ?
+          'dark' : 'light'
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: your-org
+      repo: docker-for-oracle-weblogic
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Navigation - Estructura Consolidada con Integración MkDocs
+nav:
+  - 🏠 Inicio: index.md
+  - 🚀 Primeros Pasos: getting-started.md
+  - 🏗️ Arquitectura: arquitectura.md
+  - 📦 Despliegue: deployment.md
+  - 🎯 Canary y Features: canary-and-features.md
+  - ⚖️ HAProxy: haproxy.md
+  - 🆘 Soporte: support.md
+
+# Extra
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/your-org/docker-for-oracle-weblogic
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/
+  version:
+    provider: mike
+
+# Development specific settings
+dev_addr: '0.0.0.0:8000'
+use_directory_urls: false
+
+# Copyright
+copyright: Copyright &copy; 2024 ICBS Team

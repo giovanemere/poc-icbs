@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  weblogic-a:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.weblogic
+      args:
+        VERSION: A
+    image: ${WEBLOGIC_IMAGE:-weblogic-feature-flags}:${WEBLOGIC_VERSION:-latest}
+    container_name: weblogic-a
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_ADMIN_PASSWORD:-welcome1}
+      - VERSION=A
+    volumes:
+      - ../war-projects/weblogic-features-a:/u01/oracle/user_projects/domains/base_domain/autodeploy/weblogic-features-a:rw
+      - ../war-projects:/u01/oracle/war-projects:rw
+      - weblogic_a_data:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic_logs:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      - weblogic-network
+    ports:
+      - "${WEBLOGIC_A_EXTERNAL_PORT:-7001}:7001"
+    depends_on:
+      - orcldb
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  weblogic-b:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.weblogic
+      args:
+        VERSION: B
+    image: ${WEBLOGIC_IMAGE:-weblogic-feature-flags}:${WEBLOGIC_VERSION:-latest}
+    container_name: weblogic-b
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_ADMIN_PASSWORD:-welcome1}
+      - VERSION=B
+    volumes:
+      - ../war-projects/weblogic-features-b:/u01/oracle/user_projects/domains/base_domain/autodeploy/weblogic-features-b:rw
+      - ../war-projects:/u01/oracle/war-projects:rw
+      - weblogic_b_data:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic_logs:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      - weblogic-network
+    ports:
+      - "${WEBLOGIC_B_EXTERNAL_PORT:-7002}:7001"
+    depends_on:
+      - orcldb
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  haproxy:
+    build:
+      context: .
+      dockerfile: haproxy/Dockerfile
+    image: ${HAPROXY_IMAGE:-haproxy-advanced}:${HAPROXY_VERSION:-latest}
+    container_name: haproxy
+    ports:
+      - "${HAPROXY_HTTP_EXTERNAL_PORT:-8083}:80"     # HTTP
+      - "${HAPROXY_HTTPS_EXTERNAL_PORT:-8444}:443"   # HTTPS
+      - "${HAPROXY_STATS_EXTERNAL_PORT:-8404}:8404"  # HAProxy Stats
+      - "${HAPROXY_API_EXTERNAL_PORT:-8081}:8084"    # API de administración (Flask en puerto interno 8084)
+      - "${HAPROXY_API_ALT_EXTERNAL_PORT:-8087}:8084" # API alternativa
+      - "${HAPROXY_UI_EXTERNAL_PORT:-8082}:8082"     # UI de administración
+    volumes:
+      - ../haproxy/config:/usr/local/etc/haproxy:z
+      # - ../haproxy/scripts:/scripts:z
+      - ../haproxy/config/certs:/etc/ssl/certs:z
+    user: "0:0"  # Ejecutar como root para evitar problemas de permisos
+    networks:
+      - weblogic-network
+    depends_on:
+      - weblogic-a
+      - weblogic-b
+      # - mkdocs-server  # Temporalmente comentado
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  orcldb:
+    image: container-registry.oracle.com/database/express:latest
+    container_name: orcldb
+    ports:
+      - "${ORACLE_EXTERNAL_PORT:-1521}:1521"
+      - "${ORACLE_EM_EXTERNAL_PORT:-5500}:5500"
+    environment:
+      - ORACLE_PWD=${ORACLE_ADMIN_PASSWORD:-welcome1}
+    volumes:
+      - db-oracle:/opt/oracle/oradata
+      - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
+      - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
+    networks:
+      - weblogic-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_ADMIN_PASSWORD:-welcome1}@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # === SERVICIO DE DOCUMENTACIÓN ===
+  
+  # Documentación con recarga automática
+  mkdocs-server:
+    build:
+      context: .
+      dockerfile: applications/mkdocs-server/Dockerfile
+    image: ${MKDOCS_IMAGE:-mkdocs-server}:${MKDOCS_VERSION:-latest}
+    container_name: mkdocs-server
+    volumes:
+      - ../docs:/app/docs
+      - ../mkdocs.yml:/app/mkdocs.yml
+    ports:
+      - "${MKDOCS_EXTERNAL_PORT:-8000}:8000"
+    networks:
+      - weblogic-network
+    restart: unless-stopped
+    command: mkdocs serve --dev-addr 0.0.0.0:8000
+
+networks:
+  weblogic-network:
+    driver: bridge
+
+volumes:
+  db-oracle:
+    driver: local
+  weblogic-a-logs:
+    driver: local
+  weblogic-b-logs:
+    driver: local
+  weblogic-a-monitoring:
+    driver: local
+  weblogic-b-monitoring:
+    driver: local
+  weblogic_a_data:
+    driver: local
+  weblogic_b_data:
+    driver: local
+  weblogic_logs:
+    driver: local

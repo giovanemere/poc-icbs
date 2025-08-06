@@ -1,0 +1,255 @@
+# Docker Compose - Usando Imágenes Docker Hub Públicas
+# Docker WebLogic Oracle - Producción Ready
+# Todas las imágenes principales disponibles públicamente
+
+version: '3.8'
+
+# =============================================================================
+# SERVICIOS PRINCIPALES - USANDO IMÁGENES DOCKER HUB
+# =============================================================================
+
+services:
+  # MkDocs Documentation Server - Imagen Pública
+  mkdocs:
+    image: edissonz8809/mkdocs-server:v1.1.0
+    container_name: mkdocs-server
+    ports:
+      - "8000:8000"
+    environment:
+      - MKDOCS_DEV_ADDR=0.0.0.0:8000
+      - MKDOCS_SITE_NAME=Docker WebLogic Oracle Documentation
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - weblogic-network
+    labels:
+      - "com.docker.compose.service=documentation"
+      - "com.docker.compose.version=v1.1.0"
+
+  # HAProxy Advanced Load Balancer - Imagen Pública
+  haproxy:
+    image: edissonz8809/haproxy-advanced:v1.1.0
+    container_name: haproxy-advanced
+    ports:
+      - "80:80"           # Load Balancer principal
+      - "8081:8081"       # HAProxy API
+      - "8404:8404"       # HAProxy Stats UI
+    environment:
+      - HAPROXY_STATS_USER=admin
+      - HAPROXY_STATS_PASSWORD=admin123
+      - HAPROXY_ADMIN_USER=admin
+      - HAPROXY_ADMIN_PASSWORD=admin123
+    depends_on:
+      weblogic-a:
+        condition: service_healthy
+      weblogic-b:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8404/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - weblogic-network
+    labels:
+      - "com.docker.compose.service=load-balancer"
+      - "com.docker.compose.version=v1.1.0"
+
+  # WebLogic Server A - Feature Flags - Imagen Pública
+  weblogic-a:
+    image: edissonz8809/weblogic-feature-flags:v1.1.0
+    container_name: weblogic-features-a
+    ports:
+      - "7001:7001"       # WebLogic Console A
+      - "9001:9002"       # Debug port A
+    environment:
+      - SERVER_NAME=weblogic-a
+      - WEBLOGIC_VERSION=A
+      - FEATURE_FLAGS_ENABLED=true
+      - FEATURE_VERSION_A_ENABLED=true
+      - FEATURE_VERSION_B_ENABLED=false
+      - CANARY_DEPLOYMENT=false
+      - ORACLE_DB_HOST=oracle
+      - ORACLE_DB_PORT=1521
+      - ORACLE_DB_SID=XE
+      - ORACLE_DB_USER=weblogic_dev
+      - ORACLE_DB_PASSWORD=WebLogic123
+    depends_on:
+      oracle:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 45s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - weblogic-network
+    volumes:
+      - weblogic_a_data:/opt/oracle/user_projects
+      - weblogic_logs:/opt/oracle/logs
+    labels:
+      - "com.docker.compose.service=weblogic-server-a"
+      - "com.docker.compose.version=v1.1.0"
+      - "com.docker.compose.feature-flags=enabled"
+
+  # WebLogic Server B - Feature Flags - Imagen Pública
+  weblogic-b:
+    image: edissonz8809/weblogic-feature-flags:v1.1.0
+    container_name: weblogic-features-b
+    ports:
+      - "7002:7001"       # WebLogic Console B (mapped to 7002)
+      - "9002:9002"       # Debug port B
+    environment:
+      - SERVER_NAME=weblogic-b
+      - WEBLOGIC_VERSION=B
+      - FEATURE_FLAGS_ENABLED=true
+      - FEATURE_VERSION_A_ENABLED=false
+      - FEATURE_VERSION_B_ENABLED=true
+      - CANARY_DEPLOYMENT=true
+      - ORACLE_DB_HOST=oracle
+      - ORACLE_DB_PORT=1521
+      - ORACLE_DB_SID=XE
+      - ORACLE_DB_USER=weblogic_dev
+      - ORACLE_DB_PASSWORD=WebLogic123
+    depends_on:
+      oracle:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 45s
+      timeout: 15s
+      retries: 5
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - weblogic-network
+    volumes:
+      - weblogic_b_data:/opt/oracle/user_projects
+      - weblogic_logs:/opt/oracle/logs
+    labels:
+      - "com.docker.compose.service=weblogic-server-b"
+      - "com.docker.compose.version=v1.1.0"
+      - "com.docker.compose.feature-flags=enabled"
+
+  # Oracle Database Express - Imagen Oficial Oracle
+  oracle:
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    container_name: oracle-express-db
+    ports:
+      - "1521:1521"       # Oracle Database
+      - "5500:5500"       # Oracle Enterprise Manager
+    environment:
+      - ORACLE_PWD=Oracle123
+      - ORACLE_CHARACTERSET=AL32UTF8
+      - ORACLE_EDITION=express
+      - ORACLE_PDB=XEPDB1
+      - ORACLE_SID=XE
+      - INIT_SGA_SIZE=1024
+      - INIT_PGA_SIZE=512
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/Oracle123@localhost:1521/XE", "<<<", "SELECT 1 FROM DUAL;"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 180s
+    restart: unless-stopped
+    networks:
+      - weblogic-network
+    volumes:
+      - oracle_data:/opt/oracle/oradata
+      - oracle_backup:/opt/oracle/backup
+      - ./oracle/scripts:/opt/oracle/scripts/setup:ro
+    shm_size: 1g
+    labels:
+      - "com.docker.compose.service=oracle-database"
+      - "com.docker.compose.version=21.3.0-xe"
+
+# =============================================================================
+# VOLÚMENES PERSISTENTES
+# =============================================================================
+
+volumes:
+  # Oracle Database Data
+  oracle_data:
+    driver: local
+    labels:
+      - "com.docker.compose.volume=oracle-data"
+      - "com.docker.compose.description=Oracle Database persistent data"
+
+  # Oracle Backup
+  oracle_backup:
+    driver: local
+    labels:
+      - "com.docker.compose.volume=oracle-backup"
+      - "com.docker.compose.description=Oracle Database backups"
+
+  # WebLogic A Data
+  weblogic_a_data:
+    driver: local
+    labels:
+      - "com.docker.compose.volume=weblogic-a-data"
+      - "com.docker.compose.description=WebLogic Server A user projects"
+
+  # WebLogic B Data
+  weblogic_b_data:
+    driver: local
+    labels:
+      - "com.docker.compose.volume=weblogic-b-data"
+      - "com.docker.compose.description=WebLogic Server B user projects"
+
+  # Shared WebLogic Logs
+  weblogic_logs:
+    driver: local
+    labels:
+      - "com.docker.compose.volume=weblogic-logs"
+      - "com.docker.compose.description=Shared WebLogic logs"
+
+# =============================================================================
+# REDES
+# =============================================================================
+
+networks:
+  weblogic-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+    labels:
+      - "com.docker.compose.network=weblogic-network"
+      - "com.docker.compose.description=Internal network for WebLogic services"
+
+# =============================================================================
+# CONFIGURACIÓN ADICIONAL
+# =============================================================================
+
+# Variables de entorno desde archivo
+# Cargar configuración desde .env.registry
+x-common-variables: &common-variables
+  DOCKER_REGISTRY: edissonz8809
+  PROJECT_VERSION: v1.1.0
+  BUILD_DATE: "2025-08-01"
+  ENVIRONMENT: production
+
+# Configuración de logging
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+# Aplicar logging a todos los servicios
+x-service-defaults: &service-defaults
+  logging: *default-logging
+  environment:
+    <<: *common-variables

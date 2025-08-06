@@ -1,0 +1,1 @@
+scripts/services/start-all.sh

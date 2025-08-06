@@ -1,0 +1,48 @@
+FROM haproxy:2.6
+
+# Cambiar a usuario root para instalaciones
+USER root
+
+# Instalar dependencias necesarias
+RUN apt-get update && apt-get install -y \
+    curl \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar dependencias Python para admin interfaces
+RUN pip3 install --break-system-packages flask requests
+
+# Crear directorios necesarios
+RUN mkdir -p /var/run/haproxy \
+    && mkdir -p /var/log/haproxy \
+    && mkdir -p /etc/haproxy/errors \
+    && mkdir -p /etc/ssl/certs
+
+# Copiar configuración HAProxy
+COPY haproxy/config/haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
+
+# Copiar certificados SSL si existen
+COPY haproxy/ssl/ /etc/ssl/certs/
+
+# Copiar scripts administrativos
+COPY haproxy/scripts/ /usr/local/bin/haproxy-scripts/
+
+# Establecer permisos
+RUN chown -R haproxy:haproxy /var/run/haproxy \
+    && chown -R haproxy:haproxy /var/log/haproxy \
+    && chmod +x /usr/local/bin/haproxy-scripts/*.sh 2>/dev/null || true \
+    && chmod +x /usr/local/bin/haproxy-scripts/*.py 2>/dev/null || true
+
+# Health check mejorado
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8404/stats || exit 1
+
+# Exponer puertos
+EXPOSE 80 443 8082 8084 8404 8445
+
+# Volver a usuario haproxy
+USER haproxy
+
+# Comando de inicio
+CMD ["haproxy", "-f", "/usr/local/etc/haproxy/haproxy.cfg", "-D"]

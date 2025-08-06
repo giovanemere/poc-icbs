@@ -1,0 +1,29 @@
+version: '3.2'
+
+services:
+  wls:
+    image: {dtr-registry-address}/1221-oradb-medrec:1.0
+    ports:
+      - 7011:7011
+    depends_on:
+       - orcldb
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  orcldb:
+    image: {dtr-registry-address}/database-enterprise:12.2.0.1
+    ports:
+      - 1521:1521
+      - 5500:5500
+    deploy:
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints:
+         - node.labels.db == oracle
+    volumes:
+      - db-oracle:/ORCL
+
+volumes:
+  db-oracle:

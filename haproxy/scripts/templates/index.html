@@ -1,0 +1,391 @@
+{% extends "layout.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card card-dashboard h-100 border-left-primary shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Testing A/B
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% if config.ab_testing and config.ab_testing.enabled %}
+                                <span class="badge bg-success">Activo</span>
+                                <div class="mt-2">
+                                    <div class="progress">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ config.ab_testing.weight_a }}%"
+                                            aria-valuenow="{{ config.ab_testing.weight_a }}" aria-valuemin="0" aria-valuemax="100">
+                                            A: {{ config.ab_testing.weight_a }}%
+                                        </div>
+                                        <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ 100 - config.ab_testing.weight_a }}%"
+                                            aria-valuenow="{{ 100 - config.ab_testing.weight_a }}" aria-valuemin="0" aria-valuemax="100">
+                                            B: {{ 100 - config.ab_testing.weight_a }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-diagram-3 fa-2x text-gray-300" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('ab_testing') }}" class="btn btn-sm btn-primary">Configurar</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card card-dashboard h-100 border-left-success shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Canary Deployment
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% if config.canary and config.canary.enabled %}
+                                <span class="badge bg-success">Activo</span>
+                                <div class="mt-2">
+                                    <div class="progress">
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ config.canary.percentage }}%"
+                                            aria-valuenow="{{ config.canary.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                            Canary: {{ config.canary.percentage }}%
+                                        </div>
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ 100 - config.canary.percentage }}%"
+                                            aria-valuenow="{{ 100 - config.canary.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                            Estable: {{ 100 - config.canary.percentage }}%
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-send fa-2x text-gray-300" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('canary') }}" class="btn btn-sm btn-success">Configurar</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card card-dashboard h-100 border-left-info shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            WebLogic A
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% if stats and 'weblogic-a' in stats and 'weblogic-a' in stats['weblogic-a'] and stats['weblogic-a']['weblogic-a'].status == 'UP' %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                            <div class="small mt-2">
+                                <div>Conexiones: {{ stats['weblogic-a']['weblogic-a'].active if stats and 'weblogic-a' in stats and 'weblogic-a' in stats['weblogic-a'] else 'N/A' }}</div>
+                                <div>Respuesta: {{ stats['weblogic-a']['weblogic-a'].weight if stats and 'weblogic-a' in stats and 'weblogic-a' in stats['weblogic-a'] else 'N/A' }} ms</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-server fa-2x text-gray-300" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="http://localhost:7001/console" target="_blank" class="btn btn-sm btn-info">Consola</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card card-dashboard h-100 border-left-warning shadow">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            WebLogic B
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">
+                            {% if stats and 'weblogic-b' in stats and 'weblogic-b' in stats['weblogic-b'] and stats['weblogic-b']['weblogic-b'].status == 'UP' %}
+                                <span class="badge bg-success">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                            <div class="small mt-2">
+                                <div>Conexiones: {{ stats['weblogic-b']['weblogic-b'].active if stats and 'weblogic-b' in stats and 'weblogic-b' in stats['weblogic-b'] else 'N/A' }}</div>
+                                <div>Respuesta: {{ stats['weblogic-b']['weblogic-b'].weight if stats and 'weblogic-b' in stats and 'weblogic-b' in stats['weblogic-b'] else 'N/A' }} ms</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="bi bi-server fa-2x text-gray-300" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <a href="http://localhost:7002/console" target="_blank" class="btn btn-sm btn-warning">Consola</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold">Tráfico por Backend (Testing A/B y Canary)</h6>
+            </div>
+            <div class="card-body">
+                <div class="chart-area">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+                <div class="mt-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header py-2">
+                                    <h6 class="m-0 font-weight-bold">A/B Testing</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if config.ab_testing and config.ab_testing.enabled %}
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: {{ config.ab_testing.weight_a }}%"
+                                            aria-valuenow="{{ config.ab_testing.weight_a }}" aria-valuemin="0" aria-valuemax="100">
+                                            A: {{ config.ab_testing.weight_a }}%
+                                        </div>
+                                        <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ 100 - config.ab_testing.weight_a }}%"
+                                            aria-valuenow="{{ 100 - config.ab_testing.weight_a }}" aria-valuemin="0" aria-valuemax="100">
+                                            B: {{ 100 - config.ab_testing.weight_a }}%
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="badge bg-success">Activo</span>
+                                    </div>
+                                    {% else %}
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-primary" role="progressbar" style="width: 100%"
+                                            aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                                            A: 100%
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                        <p class="small text-muted mt-2">No hay tráfico a la versión B</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header py-2">
+                                    <h6 class="m-0 font-weight-bold">Canary Deployment</h6>
+                                </div>
+                                <div class="card-body">
+                                    {% if config.canary and config.canary.enabled %}
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: {{ 100 - config.canary.percentage }}%"
+                                            aria-valuenow="{{ 100 - config.canary.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                            Estable: {{ 100 - config.canary.percentage }}%
+                                        </div>
+                                        <div class="progress-bar bg-warning" role="progressbar" style="width: {{ config.canary.percentage }}%"
+                                            aria-valuenow="{{ config.canary.percentage }}" aria-valuemin="0" aria-valuemax="100">
+                                            Canary: {{ config.canary.percentage }}%
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="badge bg-success">Activo</span>
+                                    </div>
+                                    {% else %}
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar bg-info" role="progressbar" style="width: 100%"
+                                            aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">
+                                            Estable: 100%
+                                        </div>
+                                    </div>
+                                    <div class="text-center">
+                                        <span class="badge bg-secondary">Inactivo</span>
+                                        <p class="small text-muted mt-2">No hay tráfico a Canary</p>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold">Estado de Backends</h6>
+                <a href="{{ url_for('url_status') }}" class="btn btn-sm btn-primary">
+                    <i class="bi bi-check-circle"></i> Ver estado de URLs
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>Backend</th>
+                                <th>Estado</th>
+                                <th>Servidores</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for backend_name in backends %}
+                            {% if backend_name != "stats" and backend_name != "# name" %}
+                            {% if 
+                                backend_name == "weblogic-a" or 
+                                backend_name == "ff4j-backend" or 
+                                backend_name == "feature-flags-backend" or 
+                                backend_name == "version-a-backend" or 
+                                backend_name == "weblogic-features-a" or
+                                (backend_name == "version-b-backend" and config.ab_testing and config.ab_testing.enabled) or
+                                (backend_name == "weblogic-b" and (config.ab_testing and config.ab_testing.enabled or config.canary and config.canary.enabled)) or
+                                (backend_name == "weblogic-features-b" and config.canary and config.canary.enabled)
+                            %}
+                            <tr>
+                                <td>{{ backend_name }}</td>
+                                <td>
+                                    {% if stats and backend_name in stats and "BACKEND" in stats[backend_name] and stats[backend_name]["BACKEND"].status == 'UP' %}
+                                    <span class="badge bg-success">UP</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">DOWN</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stats and backend_name in stats %}
+                                    {{ stats[backend_name]|length - 1 if stats[backend_name]|length > 1 else 0 }}
+                                    {% else %}
+                                    0
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Versión para evitar caché: {{ now() }}
+    // Datos para el gráfico de tráfico - Solo Testing A/B y Canary
+    const trafficData = {
+        labels: ['A/B Testing', 'Canary Deployment'],
+        datasets: [
+            {
+                label: 'Versión A / Estable',
+                data: [
+                    // A/B Testing - Peso de versión A
+                    {% if config.ab_testing and config.ab_testing.enabled %}
+                        {{ config.ab_testing.weight_a }}
+                    {% else %}100{% endif %},
+                    // Canary Deployment - Porcentaje de tráfico a estable
+                    {% if config.canary and config.canary.enabled %}
+                        {{ 100 - config.canary.percentage }}
+                    {% else %}100{% endif %}
+                ],
+                backgroundColor: 'rgba(78, 115, 223, 0.5)',
+                borderColor: 'rgba(78, 115, 223, 1)',
+                borderWidth: 1
+            },
+            {
+                label: 'Versión B / Canary',
+                data: [
+                    // A/B Testing - Peso de versión B
+                    {% if config.ab_testing and config.ab_testing.enabled %}
+                        {{ 100 - config.ab_testing.weight_a }}
+                    {% else %}0{% endif %},
+                    // Canary Deployment - Porcentaje de tráfico a canary
+                    {% if config.canary and config.canary.enabled %}
+                        {{ config.canary.percentage }}
+                    {% else %}0{% endif %}
+                ],
+                backgroundColor: 'rgba(246, 194, 62, 0.5)',
+                borderColor: 'rgba(246, 194, 62, 1)',
+                borderWidth: 1
+            }
+        ]
+    };
+
+    // Configuración del gráfico
+    const trafficConfig = {
+        type: 'bar',
+        data: trafficData,
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    stacked: true,
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Porcentaje (%)'
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += context.parsed.y + '%';
+                            }
+                            return label;
+                        }
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                title: {
+                    display: true,
+                    text: 'Distribución de Tráfico para Estrategias de Despliegue'
+                }
+            }
+        }
+    };
+
+    // Crear el gráfico
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        new Chart(ctx, trafficConfig);
+    });
+</script>
+{% endblock %}

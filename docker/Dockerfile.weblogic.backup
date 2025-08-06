@@ -1,0 +1,72 @@
+# =============================================================================
+# WebLogic Feature Flags Application - CORREGIDO
+# Base Image: Oracle WebLogic 12.2.1.3
+# Registry: edissonz8809/weblogic-feature-flags
+# =============================================================================
+
+FROM vulhub/weblogic:12.2.1.3-2018
+
+# Build arguments
+ARG VERSION=A
+ARG ADMIN_PASSWORD=welcome1
+
+# Switch to root for installation
+USER root
+
+# Environment variables
+ENV VERSION=${VERSION}
+ENV ADMIN_PASSWORD=${ADMIN_PASSWORD}
+ENV ORACLE_HOME=/u01/oracle
+ENV DOMAIN_HOME=/u01/oracle/user_projects/domains/base_domain
+ENV PATH=$PATH:$ORACLE_HOME/oracle_common/common/bin:$ORACLE_HOME/wlserver/common/bin
+
+# Labels for Docker Hub
+LABEL maintainer="edissonz8809"
+LABEL version="1.0.0"
+LABEL description="WebLogic Server with Feature Flags support"
+LABEL application="weblogic-feature-flags"
+LABEL environment="development"
+
+# Install required packages
+RUN yum -y install unzip curl && \
+    yum clean all
+
+# Setup directories and permissions FIRST
+RUN mkdir -p /u01/oracle/config && \
+    mkdir -p /u01/oracle/user_projects/domains && \
+    mkdir -p /u01/oracle/logs/weblogic-monitoring && \
+    mkdir -p /u01/oracle/deploy && \
+    mkdir -p /u01/oracle/container-scripts && \
+    chown -R oracle:oracle /u01/oracle && \
+    chmod -R 755 /u01/oracle
+
+# Copy container scripts (usando la estructura correcta)
+COPY applications/weblogic-feature-flags/container-scripts/ /u01/oracle/container-scripts/
+
+# Copy domain creation script
+COPY applications/weblogic-feature-flags/config/create-domain.py /u01/oracle/config/
+
+# Copy WAR files from applications (ya están compilados)
+COPY applications/weblogic-feature-flags/deploy/*.war /u01/oracle/deploy/
+
+# Set permissions for all copied files
+RUN chown -R oracle:oracle /u01/oracle/container-scripts && \
+    chown -R oracle:oracle /u01/oracle/deploy && \
+    chown -R oracle:oracle /u01/oracle/config && \
+    chmod +x /u01/oracle/container-scripts/*.sh
+
+# Set working directory
+WORKDIR /u01/oracle
+
+# Expose ports
+EXPOSE 7001 7002
+
+# Health check with longer timeout for domain creation
+HEALTHCHECK --interval=30s --timeout=15s --start-period=300s --retries=10 \
+    CMD curl -f http://localhost:7001/console || exit 1
+
+# Run as oracle user
+USER oracle
+
+# Start WebLogic with improved startup script
+CMD ["/u01/oracle/container-scripts/start-weblogic.sh"]

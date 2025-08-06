@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+    
+    <display-name>Feature Flags Demo</display-name>
+    
+    <!-- Listener para inicializar FF4j -->
+    <listener>
+        <listener-class>com.icbs.weblogic.ff4j.FF4jServletContextListener</listener-class>
+    </listener>
+    
+    <!-- Servlet para la consola web de FF4j -->
+    <servlet>
+        <servlet-name>ff4j-console</servlet-name>
+        <servlet-class>com.icbs.weblogic.ff4j.FF4jWebConsoleServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>ff4j-console</servlet-name>
+        <url-pattern>/ff4j-console/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- Servlet para la API REST de FF4j -->
+    <servlet>
+        <servlet-name>ff4j-api</servlet-name>
+        <servlet-class>com.icbs.weblogic.ff4j.FF4jApiServlet</servlet-class>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>ff4j-api</servlet-name>
+        <url-pattern>/api/ff4j/*</url-pattern>
+    </servlet-mapping>
+    
+    <!-- Servlet para demostrar el uso de FF4j -->
+    <servlet>
+        <servlet-name>feature-demo</servlet-name>
+        <servlet-class>com.icbs.weblogic.ff4j.FeatureDemoServlet</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>feature-demo</servlet-name>
+        <url-pattern>/features</url-pattern>
+    </servlet-mapping>
+    
+    <!-- Servlet para cambiar entre versión A y B -->
+    <servlet>
+        <servlet-name>version-switch</servlet-name>
+        <servlet-class>com.icbs.weblogic.ff4j.VersionSwitchServlet</servlet-class>
+    </servlet>
+    
+    <servlet-mapping>
+        <servlet-name>version-switch</servlet-name>
+        <url-pattern>/api/version-switch</url-pattern>
+    </servlet-mapping>
+    
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+    
+    <session-config>
+        <session-timeout>30</session-timeout>
+    </session-config>
+</web-app>

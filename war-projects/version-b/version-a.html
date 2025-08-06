@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirección a Versión A</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f0ff;
+            color: #333;
+        }
+        .container {
+            text-align: center;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 16px rgba(103, 58, 183, 0.15);
+            max-width: 500px;
+        }
+        h1 {
+            color: #673AB7;
+            margin-top: 0;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #673AB7;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #673AB7;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cambiando a Versión A</h1>
+        <p>Estás siendo redirigido a la versión estándar (Versión A)...</p>
+        <div class="loader"></div>
+        <p>Si no eres redirigido automáticamente, haz clic en el botón de abajo.</p>
+        <a href="/version-a/" class="button">Ir a Versión A</a>
+    </div>
+    
+    <script>
+        // Redirección automática después de 3 segundos
+        setTimeout(function() {
+            window.location.href = "/version-a/";
+        }, 3000);
+    </script>
+</body>
+</html>

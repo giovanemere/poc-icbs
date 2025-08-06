@@ -1,0 +1,164 @@
+{% extends "layout.html" %}
+
+{% block title %}Configuración de Pesos de Servidores{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Configurar Pesos de Servidores</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('server_weight') }}">
+                    <div class="mb-3">
+                        <label for="backend" class="form-label">Backend</label>
+                        <select class="form-select" id="backend" name="backend" required onchange="updateServerOptions()">
+                            <option value="" selected disabled>Seleccionar backend</option>
+                            {% for backend_name in backends %}
+                            <option value="{{ backend_name }}">{{ backend_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="server" class="form-label">Servidor</label>
+                        <select class="form-select" id="server" name="server" required>
+                            <option value="" selected disabled>Seleccionar servidor</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="weight" class="form-label">Peso: <span id="weight_value">100</span></label>
+                        <input type="range" class="form-range" min="0" max="256" step="1" id="weight" name="weight" value="100">
+                        <div class="progress mt-2">
+                            <div class="progress-bar bg-primary" role="progressbar" id="progress_weight" style="width: 39%">
+                                Peso: 100
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Información</h6>
+            </div>
+            <div class="card-body">
+                <h5>Pesos de Servidores</h5>
+                <p>Los pesos de servidores determinan cómo se distribuye el tráfico entre los servidores de un mismo backend.</p>
+                
+                <h5>Valores de Peso</h5>
+                <ul>
+                    <li><strong>0</strong>: El servidor no recibe tráfico nuevo, pero mantiene las conexiones existentes.</li>
+                    <li><strong>1-255</strong>: Peso relativo para la distribución de tráfico.</li>
+                    <li><strong>256</strong>: Peso máximo.</li>
+                </ul>
+                
+                <h5>Recomendaciones</h5>
+                <ul>
+                    <li>Utiliza pesos para balancear la carga según la capacidad de cada servidor.</li>
+                    <li>Para deshabilitar temporalmente un servidor, establece su peso a 0.</li>
+                    <li>Para realizar mantenimiento, reduce gradualmente el peso antes de detener el servidor.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Servidores Actuales</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr>
+                                <th>Backend</th>
+                                <th>Servidor</th>
+                                <th>Peso</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="servers-table-body">
+                            {% for backend_name, servers in backend_servers.items() %}
+                                {% for server in servers %}
+                                <tr>
+                                    <td>{{ backend_name }}</td>
+                                    <td>{{ server.name }}</td>
+                                    <td>{{ server.weight }}</td>
+                                    <td>
+                                        {% if server.status == 'UP' %}
+                                        <span class="badge bg-success">UP</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">DOWN</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Datos de servidores por backend
+    const backendServers = {
+        {% for backend_name, servers in backend_servers.items() %}
+        "{{ backend_name }}": [
+            {% for server in servers %}
+            {
+                "name": "{{ server.name }}",
+                "weight": {{ server.weight }},
+                "status": "{{ server.status }}"
+            },
+            {% endfor %}
+        ],
+        {% endfor %}
+    };
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const weightSlider = document.getElementById('weight');
+        const weightValue = document.getElementById('weight_value');
+        const progressWeight = document.getElementById('progress_weight');
+        
+        weightSlider.addEventListener('input', function() {
+            const value = this.value;
+            weightValue.textContent = value;
+            // Calcular porcentaje para la barra de progreso (máximo 256)
+            const percentage = Math.round((value / 256) * 100);
+            progressWeight.style.width = percentage + '%';
+            progressWeight.textContent = 'Peso: ' + value;
+        });
+    });
+    
+    function updateServerOptions() {
+        const backendSelect = document.getElementById('backend');
+        const serverSelect = document.getElementById('server');
+        const selectedBackend = backendSelect.value;
+        
+        // Limpiar opciones actuales
+        serverSelect.innerHTML = '<option value="" selected disabled>Seleccionar servidor</option>';
+        
+        // Agregar nuevas opciones basadas en el backend seleccionado
+        if (selectedBackend && backendServers[selectedBackend]) {
+            backendServers[selectedBackend].forEach(server => {
+                const option = document.createElement('option');
+                option.value = server.name;
+                option.textContent = `${server.name} (Peso: ${server.weight}, Estado: ${server.status})`;
+                serverSelect.appendChild(option);
+            });
+        }
+    }
+</script>
+{% endblock %}

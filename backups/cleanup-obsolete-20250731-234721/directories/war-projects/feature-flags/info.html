@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información - Feature Flags</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        h1 {
+            color: #2196F3;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .links {
+            margin-top: 20px;
+        }
+        .links a {
+            display: inline-block;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            padding: 10px 15px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .links a:hover {
+            background-color: #0b7dda;
+        }
+        .version-a {
+            background-color: #4CAF50;
+        }
+        .version-a:hover {
+            background-color: #45a049;
+        }
+        .version-b {
+            background-color: #FF9800;
+        }
+        .version-b:hover {
+            background-color: #e68a00;
+        }
+        .admin-link {
+            background-color: #9C27B0;
+        }
+        .admin-link:hover {
+            background-color: #7B1FA2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Información sobre Feature Flags</h1>
+        
+        <div class="section">
+            <h2>¿Qué son los Feature Flags?</h2>
+            <p>Los Feature Flags (o Feature Toggles) son una técnica de desarrollo que permite habilitar o deshabilitar funcionalidades en una aplicación sin necesidad de desplegar nuevo código. Esto permite:</p>
+            <ul>
+                <li>Lanzar nuevas características de forma controlada</li>
+                <li>Realizar pruebas A/B para comparar diferentes versiones</li>
+                <li>Implementar despliegues canary para reducir riesgos</li>
+                <li>Personalizar la experiencia para diferentes usuarios o grupos</li>
+            </ul>
+        </div>
+        
+        <div class="section">
+            <h2>Versiones disponibles</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Versión</th>
+                        <th>URL</th>
+                        <th>Descripción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Versión A</td>
+                        <td><a href="http://localhost:8083/version-a/" target="_blank">http://localhost:8083/version-a/</a></td>
+                        <td>Versión con diseño clásico</td>
+                    </tr>
+                    <tr>
+                        <td>Versión B</td>
+                        <td><a href="http://localhost:8083/version-b/" target="_blank">http://localhost:8083/version-b/</a></td>
+                        <td>Versión con nuevo diseño de UI</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="section">
+            <h2>Características controladas</h2>
+            <ul>
+                <li><strong>Nuevo diseño de UI:</strong> Habilita el nuevo diseño de interfaz de usuario</li>
+                <li><strong>Versión B:</strong> Activa la versión B (desactivado = versión A)</li>
+                <li><strong>Modo oscuro:</strong> Habilita el modo oscuro para la interfaz</li>
+                <li><strong>Dashboard avanzado:</strong> Habilita el dashboard con gráficos avanzados</li>
+                <li><strong>Notificaciones en tiempo real:</strong> Habilita las notificaciones en tiempo real</li>
+            </ul>
+        </div>
+        
+        <div class="links">
+            <a href="index.html">Volver a Inicio</a>
+            <a href="http://localhost:8083/version-a/" class="version-a" target="_blank">Ver Versión A</a>
+            <a href="http://localhost:8083/version-b/" class="version-b" target="_blank">Ver Versión B</a>
+            <a href="admin.html" class="admin-link">Administración</a>
+        </div>
+    </div>
+</body>
+</html>

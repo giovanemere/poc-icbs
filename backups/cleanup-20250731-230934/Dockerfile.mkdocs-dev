@@ -1,0 +1,29 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Instalar dependencias del sistema
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Instalar dependencias de Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Verificar que mkdocs está instalado
+RUN mkdocs --version
+
+# Copiar configuración
+COPY mkdocs.yml .
+
+# Crear directorio para docs si no existe
+RUN mkdir -p docs
+
+# Crear un archivo index.md básico si no existe
+RUN echo "# Documentación del Proyecto\n\nBienvenido a la documentación." > docs/index.md
+
+EXPOSE 8000
+
+# Comando por defecto
+CMD ["mkdocs", "serve", "--dev-addr", "0.0.0.0:8000"]

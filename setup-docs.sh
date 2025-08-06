@@ -1,0 +1,1 @@
+scripts/docs/setup-docs.sh

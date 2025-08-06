@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF4J Console</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header {
+            background-color: #3f51b5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px 5px 0 0;
+            margin-bottom: 20px;
+        }
+        h1 {
+            margin: 0;
+        }
+        .console {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .feature-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .feature-toggle:last-child {
+            border-bottom: none;
+        }
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        .button-primary {
+            background-color: #3f51b5;
+            color: white;
+        }
+        .button-secondary {
+            background-color: #f5f5f5;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FF4J Console</h1>
+            <p>Administración de Feature Flags</p>
+        </header>
+        
+        <div class="console">
+            <h2>Gestión de Características</h2>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Nuevo diseño de interfaz de usuario</strong>
+                    <p>Habilita el nuevo diseño de interfaz de usuario</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Dashboard avanzado</strong>
+                    <p>Habilita el dashboard con gráficos avanzados</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Notificaciones en tiempo real</strong>
+                    <p>Habilita las notificaciones en tiempo real</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Modo oscuro</strong>
+                    <p>Habilita el modo oscuro para la interfaz</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Exportación de datos</strong>
+                    <p>Habilita la exportación de datos a diferentes formatos</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Integración con sistemas externos</strong>
+                    <p>Habilita la integración con sistemas externos</p>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="console">
+            <h2>Propiedades</h2>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Tema de la aplicación</strong>
+                    <p>light</p>
+                </div>
+                <button class="button button-secondary">Editar</button>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Número máximo de elementos por página</strong>
+                    <p>10</p>
+                </div>
+                <button class="button button-secondary">Editar</button>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>URL del servicio de API</strong>
+                    <p>http://api.example.com</p>
+                </div>
+                <button class="button button-secondary">Editar</button>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Tiempo de caché en segundos</strong>
+                    <p>300</p>
+                </div>
+                <button class="button button-secondary">Editar</button>
+            </div>
+            
+            <div class="feature-toggle">
+                <div>
+                    <strong>Mensaje de bienvenida</strong>
+                    <p>Bienvenido a WebLogic Features</p>
+                </div>
+                <button class="button button-secondary">Editar</button>
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button class="button button-primary">Guardar Cambios</button>
+            <button class="button button-secondary">Cancelar</button>
+        </div>
+        
+        <footer>
+            <p>FF4J Console - WebLogic Deployment</p>
+            <p>© 2025 ICBS - Todos los derechos reservados</p>
+            <p><small>Nota: Esta es una simulación de la consola FF4J. Los cambios no se guardarán.</small></p>
+        </footer>
+    </div>
+    
+    <script>
+        // Simular interactividad
+        document.querySelectorAll('.toggle input').forEach(function(toggle) {
+            toggle.addEventListener('change', function() {
+                alert('En una implementación real, este cambio se guardaría en el servidor.');
+            });
+        });
+        
+        document.querySelectorAll('.button-secondary').forEach(function(button) {
+            button.addEventListener('click', function() {
+                alert('En una implementación real, esto abriría un diálogo de edición.');
+            });
+        });
+        
+        document.querySelector('.button-primary').addEventListener('click', function() {
+            alert('En una implementación real, los cambios se guardarían en el servidor.');
+        });
+    </script>
+</body>
+</html>
