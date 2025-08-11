@@ -1,283 +1,177 @@
-# 📦 Guía de Despliegue
+# Despliegue - poc-icbs
 
-## Introducción
+## 🚀 Estrategias de Despliegue
 
-Esta guía te ayudará a desplegar el sistema Docker Oracle WebLogic de manera exitosa, desde la configuración inicial hasta el despliegue en producción.
+### Desarrollo Local
 
-## Prerrequisitos
-
-### Software Requerido
-- Docker Engine 20.10+
-- Docker Compose 2.0+
-- Git
-- Bash shell
-- 8GB RAM mínimo
-- 20GB espacio en disco
-
-### Puertos Requeridos
-Asegúrate de que estos puertos estén disponibles:
-- `7001-7002`: WebLogic servers
-- `1521`: Oracle Database
-- `8000`: MkDocs
-- `8081-8087`: HAProxy interfaces
-- `8404`: HAProxy Stats
-- `8444`: HAProxy HTTPS
-
-## Despliegue Rápido
-
-### 1. Clonar el Repositorio
 ```bash
-git clone <repository-url>
-cd docker-for-oracle-weblogic
-```
+# Clonar repositorio
+git clone https://github.com/giovanemere/poc-icbs.git
+cd poc-icbs
 
-### 2. Configurar Variables de Entorno
-```bash
-# Copiar archivo de ejemplo
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
 cp .env.example .env
 
-# Editar configuración
-nano .env
+# Iniciar en modo desarrollo
+npm run dev
 ```
 
-### 3. Iniciar Servicios
+### Docker
+
+#### Dockerfile
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
+```
+
+#### Docker Compose
+```yaml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - db
+  
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: poc-icbs
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+```
+
+### Kubernetes
+
+#### Deployment
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: poc-icbs
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: poc-icbs
+  template:
+    metadata:
+      labels:
+        app: poc-icbs
+    spec:
+      containers:
+      - name: poc-icbs
+        image: poc-icbs:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+```
+
+#### Service
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: poc-icbs-service
+spec:
+  selector:
+    app: poc-icbs
+  ports:
+  - port: 80
+    targetPort: 3000
+  type: LoadBalancer
+```
+
+## 🔄 CI/CD Pipeline
+
+### GitHub Actions
+```yaml
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    - run: npm ci
+    - run: npm test
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build Docker image
+      run: docker build -t poc-icbs .
+    - name: Push to registry
+      run: docker push poc-icbs
+```
+
+## 🌍 Ambientes
+
+### Desarrollo
+- **URL**: http://localhost:3000
+- **Base de Datos**: Local PostgreSQL
+- **Logs**: Console
+
+### Staging
+- **URL**: https://staging-poc-icbs.example.com
+- **Base de Datos**: Staging PostgreSQL
+- **Logs**: ELK Stack
+
+### Producción
+- **URL**: https://poc-icbs.example.com
+- **Base de Datos**: Production PostgreSQL (HA)
+- **Logs**: ELK Stack + Alerting
+
+## 📊 Monitoreo Post-Despliegue
+
+### Health Checks
 ```bash
-# Opción 1: Inicio completo
-./scripts/start-all.sh
-
-# Opción 2: Inicio con auto-actualización
-./scripts/start-with-auto-update.sh
-
-# Opción 3: Inicio manual por servicios
-./scripts/core/docker-compose-wrapper.sh up -d
+curl https://poc-icbs.example.com/health
 ```
 
-## Despliegue Detallado
+### Métricas
+- **CPU**: < 70%
+- **Memoria**: < 80%
+- **Response Time**: < 200ms
+- **Error Rate**: < 1%
 
-### Paso 1: Preparación del Entorno
-
-#### Verificar Dependencias
-```bash
-./scripts/validation/check-dependencies.sh
-```
-
-#### Configurar Variables
-```bash
-# Variables principales en .env
-WEBLOGIC_ADMIN_PASSWORD=welcome123
-ORACLE_PASSWORD=oracle123
-HAPROXY_ADMIN_PASSWORD=admin123
-
-# Variables de red
-WEBLOGIC_NETWORK=weblogic-haproxy_weblogic-network
-```
-
-### Paso 2: Construcción de Imágenes
-
-#### Construir Todas las Imágenes
-```bash
-./scripts/build/build.sh
-```
-
-#### Construir Imágenes Específicas
-```bash
-# Solo WebLogic
-./scripts/core/docker-compose-wrapper.sh build weblogic-a weblogic-b
-
-# Solo HAProxy
-./scripts/core/docker-compose-wrapper.sh build haproxy
-
-# Solo MkDocs
-./scripts/core/docker-compose-wrapper.sh build mkdocs-server
-```
-
-### Paso 3: Despliegue de Servicios
-
-#### Orden de Inicio Recomendado
-1. **Oracle Database**
-   ```bash
-   ./scripts/core/docker-compose-wrapper.sh up -d oracle-db
-   ```
-
-2. **WebLogic Servers**
-   ```bash
-   ./scripts/core/docker-compose-wrapper.sh up -d weblogic-a weblogic-b
-   ```
-
-3. **MkDocs Documentation**
-   ```bash
-   ./scripts/core/docker-compose-wrapper.sh up -d mkdocs-server
-   ```
-
-4. **HAProxy Load Balancer**
-   ```bash
-   ./scripts/core/docker-compose-wrapper.sh up -d haproxy
-   ```
-
-### Paso 4: Verificación del Despliegue
-
-#### Verificar Estado de Contenedores
-```bash
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-```
-
-#### Verificar Conectividad
-```bash
-./scripts/validation/check-urls.sh
-```
-
-#### Verificar Health Checks
-```bash
-# HAProxy health
-curl http://localhost:8083/health
-
-# WebLogic health
-curl http://localhost:7001/console
-
-# Oracle health
-docker exec oracle-db sqlplus sys/oracle123@localhost:1521/XE as sysdba
-```
-
-## Despliegues Canary
-
-### Configuración Canary
-```bash
-# Configurar porcentajes de tráfico
-./scripts/canary/setup-canary.sh
-
-# Controlar tráfico
-./scripts/canary/manage-traffic.sh --weblogic-a 70 --weblogic-b 30
-```
-
-### Monitoreo Canary
-```bash
-# Simular tráfico
-./scripts/canary/simulate-traffic.sh
-
-# Verificar métricas
-curl http://localhost:8404/stats
-```
-
-## Configuración Avanzada
-
-### HAProxy Personalizado
-```bash
-# Editar configuración
-nano haproxy/config/haproxy.cfg
-
-# Aplicar cambios
-./scripts/auto-update-haproxy.sh
-```
-
-### WebLogic Personalizado
-```bash
-# Configurar dominios
-nano weblogic/config/domain-config.py
-
-# Reconstruir
-./scripts/core/docker-compose-wrapper.sh build --no-cache weblogic-a
-```
-
-## Troubleshooting
-
-### Problemas Comunes
-
-#### Contenedores no Inician
-```bash
-# Verificar logs
-docker logs <container-name>
-
-# Verificar recursos
-docker system df
-docker system prune
-```
-
-#### Problemas de Red
-```bash
-# Verificar redes
-docker network ls
-docker network inspect weblogic-haproxy_weblogic-network
-
-# Recrear red
-docker network rm weblogic-haproxy_weblogic-network
-./scripts/start-all.sh
-```
-
-#### Problemas de Puertos
-```bash
-# Verificar puertos en uso
-netstat -tlnp | grep -E ":(7001|7002|1521|8000|808[0-9])"
-
-# Liberar puertos
-./scripts/stop-all-services.sh
-```
-
-### Logs y Diagnóstico
-```bash
-# Logs de todos los servicios
-./scripts/utilities/diagnose-and-fix.sh
-
-# Logs específicos
-docker logs haproxy --tail 50
-docker logs weblogic-a --tail 50
-docker logs oracle-db --tail 50
-```
-
-## Mantenimiento
-
-### Actualizaciones
-```bash
-# Actualizar configuración HAProxy
-./scripts/auto-update-haproxy.sh
-
-# Actualizar documentación
-./scripts/docs/build-docs.sh
-```
-
-### Backup y Restore
-```bash
-# Backup de configuración
-tar -czf backup-$(date +%Y%m%d).tar.gz config/ haproxy/ weblogic/
-
-# Backup de base de datos
-docker exec oracle-db exp system/oracle123 file=backup.dmp full=y
-```
-
-### Limpieza
-```bash
-# Limpieza completa
-./scripts/maintenance/cleanup-all.sh
-
-# Limpieza selectiva
-./scripts/maintenance/master-cleanup.sh
-```
-
-## Despliegue en Producción
-
-### Consideraciones de Seguridad
-- Cambiar contraseñas por defecto
-- Configurar SSL/TLS
-- Implementar firewall
-- Configurar logs centralizados
-
-### Monitoreo en Producción
-- Configurar alertas
-- Implementar métricas personalizadas
-- Configurar backup automático
-- Implementar health checks externos
-
-### Escalabilidad
-- Configurar múltiples instancias
-- Implementar auto-scaling
-- Configurar load balancing externo
-- Optimizar recursos
-
----
-
-## Enlaces Relacionados
-
-- [Arquitectura del Sistema](arquitectura.md)
-- [Guía Canary Detallada](deployment/canary-guide.md)
-- [Configuración HAProxy](guides/haproxy-setup.md)
-- [Troubleshooting](guides/troubleshooting.md)
-- [Scripts de Automatización](scripts/index.md)
+### Alertas
+- **Downtime**: > 1 minuto
+- **High CPU**: > 80%
+- **High Memory**: > 90%
+- **Error Rate**: > 5%

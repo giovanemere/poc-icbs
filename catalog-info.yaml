@@ -2,21 +2,37 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: poc-icbs
-  title: POC ICBS
-  description: Proof of Concept para sistema ICBS
+  description: ICBS integration service
   annotations:
-    github.com/project-slug: giovanemere/poc-icbs
+    # Documentación automática
     backstage.io/techdocs-ref: dir:.
+    
+    # GitHub integration
+    github.com/project-slug: giovanemere/poc-icbs
+    backstage.io/source-location: url:https://github.com/giovanemere/poc-icbs
+    
+    # CI/CD integration
+    github.com/workflows: .github/workflows/
+    
+    # View Source
+    backstage.io/view-url: https://github.com/giovanemere/poc-icbs
+    backstage.io/edit-url: https://github.com/giovanemere/poc-icbs/edit/main/catalog-info.yaml
+    
   tags:
-    - poc
-    - billpay
-    - ia-ops
+    - component
+    - service
   links:
     - url: https://github.com/giovanemere/poc-icbs
       title: Repository
       icon: github
+    - url: https://github.com/giovanemere/poc-icbs/actions
+      title: GitHub Actions
+      icon: github
+    - url: https://github.com/giovanemere/poc-icbs/blob/main/README.md
+      title: Documentation
+      icon: docs
 spec:
   type: service
-  lifecycle: experimental
+  lifecycle: production
   owner: platform-team
-  system: billpay-system
+  system: ia-ops-platform
