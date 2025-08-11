@@ -1,5 +1,5 @@
 # Dockerfile para HAProxy Advanced - Ubuntu Base (Corregido)
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 # Metadata
 LABEL maintainer="DevOps Team"
