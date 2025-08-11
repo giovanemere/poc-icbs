@@ -1,92 +1,44 @@
-# Arquitectura - poc-icbs
+# Architecture
 
-## 🏗️ Visión General
+## Visión General
 
-Integration service for ICBS (Integrated Core Banking System)
+ICBS integration service forma parte del ecosistema IA-Ops y sigue los patrones arquitectónicos establecidos.
 
-## 📊 Diagrama de Arquitectura
+## Componentes
+
+### Core Components
+
+- **Controller Layer**: Maneja las peticiones HTTP
+- **Service Layer**: Lógica de negocio
+- **Data Layer**: Acceso a datos
+
+### Dependencies
+
+- Base de datos
+- Servicios externos
+- Cache (Redis)
+
+## Patrones de Diseño
+
+- Repository Pattern
+- Dependency Injection
+- Event-Driven Architecture
+
+## Diagramas
 
 ```mermaid
 graph TB
-    subgraph "Frontend Layer"
+    subgraph "Frontend"
         UI[User Interface]
-        STATE[State Management]
     end
     
-    subgraph "API Layer"
-        API[REST API]
-        AUTH[Authentication]
-        VALID[Validation]
-    end
-    
-    subgraph "Business Layer"
-        BL[Business Logic]
-        SERV[Services]
-    end
-    
-    subgraph "Data Layer"
+    subgraph "Backend"
+        API[API Gateway]
+        SVC[Service Layer]
         DB[(Database)]
-        CACHE[(Cache)]
     end
     
-    UI --> STATE
-    STATE --> API
-    API --> AUTH
-    API --> VALID
-    VALID --> BL
-    BL --> SERV
-    SERV --> DB
-    SERV --> CACHE
+    UI --> API
+    API --> SVC
+    SVC --> DB
 ```
-
-## 🔧 Componentes
-
-### Frontend
-- **Framework**: React/Vue/Angular
-- **State Management**: Redux/Vuex/NgRx
-- **Routing**: React Router/Vue Router/Angular Router
-
-### Backend
-- **Framework**: Express.js/Fastify/NestJS
-- **Authentication**: JWT/OAuth2
-- **Validation**: Joi/Yup/class-validator
-
-### Base de Datos
-- **Tipo**: PostgreSQL/MySQL/MongoDB
-- **ORM**: Prisma/TypeORM/Mongoose
-- **Migraciones**: Automáticas
-
-### Cache
-- **Redis**: Para sesiones y cache
-- **Memoria**: Para datos frecuentes
-
-## 🔄 Flujo de Datos
-
-1. **Request**: Cliente envía petición
-2. **Authentication**: Verificación de credenciales
-3. **Validation**: Validación de datos
-4. **Business Logic**: Procesamiento de negocio
-5. **Data Access**: Acceso a base de datos
-6. **Response**: Respuesta al cliente
-
-## 🛡️ Seguridad
-
-- **HTTPS**: Comunicación encriptada
-- **JWT**: Tokens de autenticación
-- **CORS**: Control de acceso
-- **Rate Limiting**: Limitación de requests
-- **Input Validation**: Validación de entrada
-
-## 📈 Escalabilidad
-
-- **Horizontal**: Múltiples instancias
-- **Load Balancer**: Distribución de carga
-- **Database Sharding**: Particionado de datos
-- **Caching**: Optimización de performance
-
-## 🔍 Monitoreo
-
-- **Logs**: Structured logging
-- **Metrics**: Prometheus/Grafana
-- **Tracing**: Jaeger/Zipkin
-- **Health Checks**: Endpoints de salud

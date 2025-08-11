@@ -1,6 +1,5 @@
 site_name: 'poc-icbs Documentation'
 site_description: 'Documentación automática generada por Backstage TechDocs'
-site_url: 'https://github.com/giovanemere/poc-icbs'
 
 nav:
   - Home: index.md
@@ -18,10 +17,6 @@ theme:
   palette:
     primary: blue
     accent: blue
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - toc.integrate
 
 markdown_extensions:
   - admonition
@@ -31,16 +26,6 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:mermaid2.fence_mermaid
-  - pymdownx.tabbed
-  - pymdownx.details
-  - toc:
-      permalink: true
 
 repo_url: https://github.com/giovanemere/poc-icbs
-repo_name: giovanemere/poc-icbs
 edit_uri: edit/main/docs/
-
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/giovanemere/poc-icbs

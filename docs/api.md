@@ -1,74 +1,27 @@
-# API Documentation - poc-icbs
+# API Documentation
 
-## 📋 Descripción de la API
-
-API RESTful para ICBS integration service
-
-## 🔗 Base URL
-
-```
-https://api.example.com/v1
-```
-
-## 🔐 Autenticación
-
-```bash
-Authorization: Bearer <token>
-```
-
-## 📚 Endpoints
+## Endpoints
 
 ### Health Check
 
-```http
+```
 GET /health
 ```
+
+Retorna el estado de salud del servicio.
 
 **Respuesta:**
 ```json
 {
   "status": "ok",
-  "timestamp": "2025-08-11T05:00:00Z",
-  "version": "1.0.0"
+  "timestamp": "2025-08-11T06:00:00Z"
 }
 ```
 
-### API Info
+## Autenticación
 
-```http
-GET /api/v1
-```
+Describe aquí los métodos de autenticación utilizados.
 
-**Respuesta:**
-```json
-{
-  "name": "poc-icbs",
-  "version": "1.0.0",
-  "description": "ICBS integration service"
-}
-```
+## Ejemplos
 
-## 📊 Códigos de Estado
-
-| Código | Descripción |
-|--------|-------------|
-| 200    | OK |
-| 201    | Created |
-| 400    | Bad Request |
-| 401    | Unauthorized |
-| 404    | Not Found |
-| 500    | Internal Server Error |
-
-## 🧪 Ejemplos
-
-### cURL
-```bash
-curl -X GET https://api.example.com/v1/health
-```
-
-### JavaScript
-```javascript
-fetch('https://api.example.com/v1/health')
-  .then(response => response.json())
-  .then(data => console.log(data));
-```
+Incluye ejemplos de uso de la API.
