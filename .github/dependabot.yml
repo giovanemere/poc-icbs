@@ -1,0 +1,108 @@
+version: 2
+updates:
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "devops-team"
+      - "oracle-team"
+    assignees:
+      - "infrastructure-lead"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "oracle"
+      - "weblogic"
+
+  # Enable version updates for Docker in applications directory
+  - package-ecosystem: "docker"
+    directory: "/applications/weblogic-feature-flags"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "10:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "weblogic-team"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "weblogic"
+
+  - package-ecosystem: "docker"
+    directory: "/applications/haproxy-advanced"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "10:30"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "networking-team"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "haproxy"
+
+  - package-ecosystem: "docker"
+    directory: "/applications/mkdocs-server"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "11:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "docs-team"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "mkdocs"
+
+  - package-ecosystem: "docker"
+    directory: "/applications/oracle-express-db"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "11:30"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "database-team"
+    labels:
+      - "dependencies"
+      - "docker"
+      - "oracle-db"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Enable version updates for Python (MkDocs)
+  - package-ecosystem: "pip"
+    directory: "/applications/mkdocs-server"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "docs-team"
+    labels:
+      - "dependencies"
+      - "python"
+      - "mkdocs"
