@@ -1,5 +1,5 @@
 # Dockerfile para MkDocs Server
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # Metadata
 LABEL maintainer="DevOps Team"
