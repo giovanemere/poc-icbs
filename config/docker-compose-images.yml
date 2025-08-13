@@ -1,0 +1,201 @@
+version: '3.8'
+
+services:
+  weblogic-a:
+    image: weblogic-version-a:latest
+    container_name: weblogic-a
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_A_ADMIN_PASSWORD:-welcome123}
+      - VERSION=A
+      - BUILD_ENV=version-a
+      - DOMAIN_NAME=base_domain
+      - TZ=${TZ:-America/Mexico_City}
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-a-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-a-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      weblogic-network:
+        ipv4_address: 172.23.0.4
+    ports:
+      - "7001:7001"
+    depends_on:
+      - orcldb
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+
+  weblogic-b:
+    image: weblogic-version-b:latest
+    container_name: weblogic-b
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_B_ADMIN_PASSWORD:-welcome123}
+      - VERSION=B
+      - BUILD_ENV=version-b
+      - DOMAIN_NAME=base_domain
+      - TZ=${TZ:-America/Mexico_City}
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-b-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-b-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      weblogic-network:
+        ipv4_address: 172.23.0.3
+    ports:
+      - "7002:7001"
+    depends_on:
+      - orcldb
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+
+  weblogic-ff:
+    image: weblogic-feature-flags:latest
+    container_name: weblogic-ff
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_A_ADMIN_PASSWORD:-welcome123}
+      - VERSION=FF
+      - BUILD_ENV=feature-flags
+      - DOMAIN_NAME=base_domain
+      - FF4J_CONSOLE_ENABLED=true
+      - FF4J_AUDIT_ENABLED=true
+      - FF4J_MONITORING_ENABLED=true
+      - TZ=${TZ:-America/Mexico_City}
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-ff-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-ff-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      weblogic-network:
+        ipv4_address: 172.23.0.6
+    ports:
+      - "7003:7001"
+    depends_on:
+      - orcldb
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+
+  haproxy:
+    image: haproxy-advanced:latest
+    container_name: haproxy
+    environment:
+      - HAPROXY_STATS_USER=admin
+      - HAPROXY_STATS_PASSWORD=admin123
+      - DEFAULT_STRATEGY=roundrobin
+      - DEFAULT_WEIGHT_A=50
+      - DEFAULT_WEIGHT_B=50
+      - TZ=${TZ:-America/Mexico_City}
+    ports:
+      - "8080:80"     # HTTP Frontend
+      - "8443:443"    # HTTPS Frontend
+      - "8404:8404"   # HAProxy Stats
+      - "8081:8081"   # API de administración
+      - "8082:8082"   # UI de administración
+    volumes:
+      - ../haproxy/config:/usr/local/etc/haproxy:z
+      - ../haproxy/scripts:/scripts:z
+      - ../haproxy/dashboard:/dashboard:z
+      - ../haproxy/config/certs:/etc/ssl/certs:z
+    networks:
+      weblogic-network:
+        ipv4_address: 172.23.0.5
+    depends_on:
+      - weblogic-a
+      - weblogic-b
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8404/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio dedicado para el dashboard profesional
+  dashboard:
+    build:
+      context: ../haproxy/dashboard
+      dockerfile: Dockerfile
+    container_name: dashboard
+    ports:
+      - "8001:8000"   # Dashboard profesional (puerto alternativo para evitar conflictos)
+    networks:
+      weblogic-network:
+        ipv4_address: 172.23.0.7
+    environment:
+      - TZ=${TZ:-America/Mexico_City}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  orcldb:
+    image: edissonz8809/oracle-express-db:latest
+    container_name: orcldb
+    environment:
+      - ORACLE_SID=ORCLCDB
+      - ORACLE_PDB=ORCLPDB1
+      - ORACLE_PWD=Oracle123
+      - ORACLE_CHARACTERSET=AL32UTF8
+      - ORACLE_EDITION=enterprise
+      - TZ=${TZ:-America/Mexico_City}
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    volumes:
+      - db-oracle:/opt/oracle/oradata
+      - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
+      - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
+    networks:
+      weblogic-network:
+        ipv4_address: 172.23.0.2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/Oracle123@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 2m
+
+networks:
+  weblogic-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
+
+volumes:
+  db-oracle:
+    driver: local
+  weblogic-a-logs:
+    driver: local
+  weblogic-b-logs:
+    driver: local
+  weblogic-ff-logs:
+    driver: local
+  weblogic-a-monitoring:
+    driver: local
+  weblogic-b-monitoring:
+    driver: local
+  weblogic-ff-monitoring:
+    driver: local

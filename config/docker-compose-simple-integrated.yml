@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  # Servicio de gestión integrada que usa el entorno existente
+  integrated-manager:
+    image: alpine:latest
+    container_name: integrated-manager
+    volumes:
+      - ../:/workspace:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    working_dir: /workspace
+    command: |
+      sh -c "
+        apk add --no-cache bash curl docker-cli docker-compose python3 py3-requests &&
+        echo '🚀 Integrated Manager Ready!' &&
+        echo 'Use: docker-compose exec integrated-manager ./run-integrated-command.sh' &&
+        echo 'Or: ./manage-simple-integrated.sh run-integrated' &&
+        echo '' &&
+        echo '📋 Available commands:' &&
+        echo '  ./run-integrated-command.sh' &&
+        echo '  ./cleanup-environment.sh light' &&
+        echo '  ./start-dashboard-integrated.sh' &&
+        echo '  ./update-haproxy-ips.sh' &&
+        echo '' &&
+        tail -f /dev/null
+      "
+    network_mode: "host"
+    restart: unless-stopped

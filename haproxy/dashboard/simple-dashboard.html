@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard WebLogic A/B y Canary</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header { background: #2c3e50; color: white; text-align: center; padding: 20px; border-radius: 8px; }
+        .status { display: inline-block; padding: 5px 10px; border-radius: 4px; color: white; margin: 5px; }
+        .status.up { background: #27ae60; }
+        .status.down { background: #e74c3c; }
+        .links { margin: 20px 0; }
+        .links a { display: inline-block; padding: 10px 15px; background: #3498db; color: white; text-decoration: none; border-radius: 4px; margin: 5px; }
+        .links a:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Dashboard de Tráfico WebLogic</h1>
+            <p>Sistema de A/B Testing y Canary Deployment</p>
+        </div>
+        
+        <div class="card">
+            <h2>Estado de los Servicios</h2>
+            <div class="status up">WebLogic A: UP</div>
+            <div class="status up">WebLogic B: UP</div>
+            <div class="status up">HAProxy: UP</div>
+            <div class="status up">Oracle DB: UP</div>
+        </div>
+        
+        <div class="card">
+            <h2>Enlaces Rápidos</h2>
+            <div class="links">
+                <a href="http://localhost:8404/stats" target="_blank">HAProxy Stats</a>
+                <a href="http://localhost:8082" target="_blank">Admin UI</a>
+                <a href="http://localhost:7001/console" target="_blank">WebLogic A</a>
+                <a href="http://localhost:7002/console" target="_blank">WebLogic B</a>
+                <a href="http://localhost:8080/version-a/" target="_blank">Version A</a>
+                <a href="http://localhost:8080/version-b/" target="_blank">Version B</a>
+                <a href="http://localhost:8080/feature-flags/" target="_blank">Feature Flags</a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>Configuración A/B Testing</h2>
+            <p>Para configurar A/B Testing y Canary Deployment, usa:</p>
+            <ul>
+                <li><strong>HAProxy Stats:</strong> <a href="http://localhost:8404/stats">http://localhost:8404/stats</a> (admin/admin123)</li>
+                <li><strong>Admin UI:</strong> <a href="http://localhost:8082">http://localhost:8082</a></li>
+                <li><strong>API:</strong> <a href="http://localhost:8081/api">http://localhost:8081/api</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Auto-refresh cada 30 segundos
+        setTimeout(function(){ location.reload(); }, 30000);
+    </script>
+</body>
+</html>
