@@ -1,1 +1,0 @@
-scripts/maintenance/update_dashboard.sh

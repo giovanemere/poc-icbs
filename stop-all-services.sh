@@ -1,1 +1,0 @@
-scripts/services/stop-all-services.sh

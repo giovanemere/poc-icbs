@@ -1,1 +1,0 @@
-scripts/docs/manage-docs-haproxy.sh

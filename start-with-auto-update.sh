@@ -1,1 +1,0 @@
-scripts/services/start-with-auto-update.sh

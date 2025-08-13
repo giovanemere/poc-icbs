@@ -1,1 +1,0 @@
-scripts/docs/apply-haproxy-mkdocs.sh

@@ -1,1 +1,0 @@
-scripts/services/manage-services.sh

@@ -1,1 +1,0 @@
-maintenance/diagnose-and-fix.sh

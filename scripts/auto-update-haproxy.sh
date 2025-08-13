@@ -1,1 +1,0 @@
-maintenance/auto-update-haproxy.sh

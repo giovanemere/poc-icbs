@@ -1,1 +1,0 @@
-core/docker-compose-wrapper.sh
