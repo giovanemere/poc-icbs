@@ -1,1 +1,0 @@
-scripts/canary/test-canary.sh

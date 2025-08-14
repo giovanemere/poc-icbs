@@ -1,1 +1,0 @@
-scripts/canary/canary-control.sh
