@@ -1,0 +1,399 @@
+version: '3.8'
+
+# =============================================================================
+# Docker Compose Completo e Integrado
+# Proyecto: Oracle WebLogic con Testing A/B, Canary Deployment y Feature Flags
+# =============================================================================
+
+services:
+  # =============================================================================
+  # Oracle Database
+  # =============================================================================
+  orcldb:
+    image: edissonz8809/oracle-express-db:latest
+    container_name: orcldb-integrated
+    hostname: oracle-db
+    ports:
+      - "${EXTERNAL_ORACLE_PORT:-1521}:1521"
+      - "${EXTERNAL_ORACLE_EM_PORT:-5500}:5500"
+    environment:
+      - ORACLE_PWD=${ORACLE_PWD:-welcome1}
+      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
+      - ORACLE_PDB=${ORACLE_PDB:-ORCLPDB1}
+      - ORACLE_CHARACTERSET=${ORACLE_CHARACTERSET:-AL32UTF8}
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
+      - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
+      - oracle-logs:/opt/oracle/diag
+    networks:
+      weblogic-network:
+        aliases:
+          - oracle-db
+          - database
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_PWD:-welcome1}@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: ${ORACLE_MEMORY_LIMIT:-2g}
+          cpus: '${ORACLE_CPU_LIMIT:-2}'
+
+  # =============================================================================
+  # WebLogic Server A (Versión Estable)
+  # =============================================================================
+  weblogic-a:
+    image: weblogic-local:latest
+    container_name: weblogic-a-integrated
+    hostname: weblogic-a
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_A_ADMIN_PASSWORD:-welcome1}
+      - ADMIN_USER=${WEBLOGIC_A_ADMIN_USER:-weblogic}
+      - DOMAIN_NAME=${WEBLOGIC_A_DOMAIN_NAME:-base_domain_a}
+      - VERSION=A
+      - APP_VERSION=${APP_VERSION_A:-1.0.0}
+      - ORACLE_HOST=oracle-db
+      - ORACLE_PORT=1521
+      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
+      - ORACLE_USER=${ORACLE_USER:-system}
+      - ORACLE_PASSWORD=${ORACLE_PWD:-welcome1}
+      - JAVA_OPTIONS=${WEBLOGIC_JAVA_OPTIONS:--Dweblogic.StdoutDebugEnabled=false}
+      - MEMORY_ARGS=${WEBLOGIC_MEMORY_ARGS:--Xms1024m -Xmx2048m}
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-a-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-a-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+      - weblogic-a-data:/u01/oracle/user_projects/domains/base_domain/data:rw
+    networks:
+      weblogic-network:
+        aliases:
+          - weblogic-a
+          - weblogic-stable
+    ports:
+      - "${EXTERNAL_WEBLOGIC_A_PORT:-7003}:7001"
+    depends_on:
+      orcldb:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: ${WEBLOGIC_A_MEMORY_LIMIT:-2g}
+          cpus: '${WEBLOGIC_A_CPU_LIMIT:-2}'
+
+  # =============================================================================
+  # WebLogic Server B (Versión Canary/Beta)
+  # =============================================================================
+  weblogic-b:
+    image: weblogic-local:latest
+    container_name: weblogic-b-integrated
+    hostname: weblogic-b
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_B_ADMIN_PASSWORD:-welcome1}
+      - ADMIN_USER=${WEBLOGIC_B_ADMIN_USER:-weblogic}
+      - DOMAIN_NAME=${WEBLOGIC_B_DOMAIN_NAME:-base_domain_b}
+      - VERSION=B
+      - APP_VERSION=${APP_VERSION_B:-2.0.0-beta}
+      - ORACLE_HOST=oracle-db
+      - ORACLE_PORT=1521
+      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
+      - ORACLE_USER=${ORACLE_USER:-system}
+      - ORACLE_PASSWORD=${ORACLE_PWD:-welcome1}
+      - JAVA_OPTIONS=${WEBLOGIC_JAVA_OPTIONS:--Dweblogic.StdoutDebugEnabled=false}
+      - MEMORY_ARGS=${WEBLOGIC_MEMORY_ARGS:--Xms1024m -Xmx2048m}
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-b-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-b-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+      - weblogic-b-data:/u01/oracle/user_projects/domains/base_domain/data:rw
+    networks:
+      weblogic-network:
+        aliases:
+          - weblogic-b
+          - weblogic-canary
+    ports:
+      - "${EXTERNAL_WEBLOGIC_B_PORT:-7004}:7001"
+    depends_on:
+      orcldb:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: ${WEBLOGIC_B_MEMORY_LIMIT:-2g}
+          cpus: '${WEBLOGIC_B_CPU_LIMIT:-2}'
+
+  # =============================================================================
+  # HAProxy Load Balancer
+  # =============================================================================
+  haproxy:
+    image: edissonz8809/haproxy-advanced:latest
+    container_name: haproxy-integrated
+    hostname: haproxy
+    ports:
+      - "${EXTERNAL_HTTP_PORT:-8090}:80"
+      - "${EXTERNAL_HTTPS_PORT:-8443}:443"
+      - "${EXTERNAL_STATS_PORT:-8414}:8404"
+      - "${EXTERNAL_API_PORT:-8091}:8081"
+      - "${EXTERNAL_UI_PORT:-8092}:8082"
+    environment:
+      - HAPROXY_STATS_USER=${HAPROXY_STATS_USER:-admin}
+      - HAPROXY_STATS_PASSWORD=${HAPROXY_STATS_PASSWORD:-admin123}
+      - DEFAULT_STRATEGY=${DEFAULT_STRATEGY:-roundrobin}
+      - DEFAULT_WEIGHT_A=${DEFAULT_WEIGHT_A:-50}
+      - DEFAULT_WEIGHT_B=${DEFAULT_WEIGHT_B:-50}
+      - WEBLOGIC_A_HOST=weblogic-a
+      - WEBLOGIC_B_HOST=weblogic-b
+      - WEBLOGIC_A_PORT=7001
+      - WEBLOGIC_B_PORT=7001
+    volumes:
+      - ../haproxy/config:/usr/local/etc/haproxy:z
+      - ../haproxy/scripts:/scripts:z
+      - ../haproxy/config/certs:/etc/ssl/certs:z
+      - haproxy-logs:/var/log/haproxy:rw
+    networks:
+      weblogic-network:
+        aliases:
+          - haproxy
+          - loadbalancer
+    depends_on:
+      weblogic-a:
+        condition: service_healthy
+      weblogic-b:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8404/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: ${HAPROXY_MEMORY_LIMIT:-512m}
+          cpus: '${HAPROXY_CPU_LIMIT:-1}'
+
+  # =============================================================================
+  # Dashboard Profesional Integrado
+  # =============================================================================
+  dashboard:
+    image: nginx:alpine
+    container_name: dashboard-integrated
+    hostname: dashboard
+    ports:
+      - "${EXTERNAL_DASHBOARD_PORT:-8011}:80"
+    environment:
+      - DASHBOARD_REFRESH_INTERVAL=${DASHBOARD_REFRESH_INTERVAL:-5}
+      - DASHBOARD_API_TIMEOUT=${DASHBOARD_API_TIMEOUT:-10}
+      - HAPROXY_HOST=haproxy
+      - WEBLOGIC_A_HOST=weblogic-a
+      - WEBLOGIC_B_HOST=weblogic-b
+      - ORACLE_HOST=oracle-db
+    volumes:
+      - ../haproxy/dashboard:/usr/share/nginx/html:ro
+      - ../haproxy/dashboard/config:/etc/nginx/conf.d:ro
+      - dashboard-logs:/var/log/nginx:rw
+    networks:
+      weblogic-network:
+        aliases:
+          - dashboard
+          - monitoring
+    depends_on:
+      - haproxy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: ${DASHBOARD_MEMORY_LIMIT:-256m}
+          cpus: '${DASHBOARD_CPU_LIMIT:-0.5}'
+
+  # =============================================================================
+  # Servicio de Actualización Automática de IPs
+  # =============================================================================
+  ip-updater:
+    image: alpine:latest
+    container_name: ip-updater-integrated
+    hostname: ip-updater
+    environment:
+      - PROJECT_DIR=/app
+      - UPDATE_INTERVAL=${IP_UPDATE_INTERVAL:-300}
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+    volumes:
+      - ../:/app:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ip-updater-logs:/var/log/ip-updater:rw
+    networks:
+      weblogic-network:
+        aliases:
+          - ip-updater
+    command: >
+      sh -c '
+        apk add --no-cache curl jq docker-cli &&
+        while true; do
+          echo "[$(date)] Actualizando IPs automáticamente..." &&
+          /app/scripts/auto-update-ips-improved.sh &&
+          echo "[$(date)] Esperando $${UPDATE_INTERVAL} segundos..." &&
+          sleep $${UPDATE_INTERVAL}
+        done
+      '
+    depends_on:
+      - orcldb
+      - weblogic-a
+      - weblogic-b
+      - haproxy
+      - dashboard
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+          cpus: '0.1'
+
+  # =============================================================================
+  # Servicio de Monitoreo y Health Checks
+  # =============================================================================
+  health-monitor:
+    image: alpine:latest
+    container_name: health-monitor-integrated
+    hostname: health-monitor
+    environment:
+      - MONITOR_INTERVAL=${HEALTH_CHECK_INTERVAL:-30}
+      - ALERT_WEBHOOK=${ALERT_WEBHOOK:-}
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+    volumes:
+      - ../scripts:/scripts:ro
+      - health-monitor-logs:/var/log/health-monitor:rw
+    networks:
+      weblogic-network:
+        aliases:
+          - health-monitor
+          - monitoring
+    command: >
+      sh -c '
+        apk add --no-cache curl jq &&
+        while true; do
+          echo "[$(date)] Verificando salud de servicios..." &&
+          curl -f http://haproxy:8404/stats > /dev/null 2>&1 || echo "HAProxy no responde" &&
+          curl -f http://weblogic-a:7001/console > /dev/null 2>&1 || echo "WebLogic A no responde" &&
+          curl -f http://weblogic-b:7001/console > /dev/null 2>&1 || echo "WebLogic B no responde" &&
+          curl -f http://dashboard:80 > /dev/null 2>&1 || echo "Dashboard no responde" &&
+          sleep $${MONITOR_INTERVAL}
+        done
+      '
+    depends_on:
+      - haproxy
+      - dashboard
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+          cpus: '0.1'
+
+# =============================================================================
+# Redes
+# =============================================================================
+networks:
+  weblogic-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: weblogic-br
+    ipam:
+      driver: default
+      config:
+        - subnet: ${SUBNET:-172.25.0.0/16}
+          gateway: ${GATEWAY:-172.25.0.1}
+    labels:
+      - "project=weblogic-integrated"
+      - "environment=${ENVIRONMENT:-development}"
+
+# =============================================================================
+# Volúmenes
+# =============================================================================
+volumes:
+  # Oracle Database
+  oracle-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ORACLE_DATA_DIR:-./data/oracle}
+  oracle-logs:
+    driver: local
+
+  # WebLogic A
+  weblogic-a-logs:
+    driver: local
+  weblogic-a-monitoring:
+    driver: local
+  weblogic-a-data:
+    driver: local
+
+  # WebLogic B
+  weblogic-b-logs:
+    driver: local
+  weblogic-b-monitoring:
+    driver: local
+  weblogic-b-data:
+    driver: local
+
+  # HAProxy
+  haproxy-logs:
+    driver: local
+
+  # Dashboard
+  dashboard-logs:
+    driver: local
+
+  # Servicios auxiliares
+  ip-updater-logs:
+    driver: local
+  health-monitor-logs:
+    driver: local
+
+# =============================================================================
+# Configuración adicional
+# =============================================================================
+x-common-variables: &common-variables
+  TZ: ${TZ:-America/Mexico_City}
+  ENVIRONMENT: ${ENVIRONMENT:-development}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  DEBUG_MODE: ${DEBUG_MODE:-false}
+
+x-restart-policy: &restart-policy
+  restart: unless-stopped
+
+x-logging: &default-logging
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "${LOG_MAX_SIZE:-100m}"
+      max-file: "${LOG_MAX_FILES:-5}"

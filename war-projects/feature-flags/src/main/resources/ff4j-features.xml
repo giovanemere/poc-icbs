@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<features xmlns="http://ff4j.org/schema"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://ff4j.org/schema http://ff4j.org/schema/ff4j-1.4.0.xsd">
+          
+    <!-- Feature 1: Nuevo diseño de interfaz de usuario -->
+    <feature uid="new-ui-design" enable="true" description="Nuevo diseño de interfaz de usuario" />
+    
+    <!-- Feature 2: Dashboard avanzado -->
+    <feature uid="advanced-dashboard" enable="false" description="Dashboard con gráficos avanzados" />
+    
+    <!-- Feature 3: Notificaciones en tiempo real -->
+    <feature uid="real-time-notifications" enable="false" description="Notificaciones en tiempo real" />
+    
+    <!-- Feature 4: Modo oscuro -->
+    <feature uid="dark-mode" enable="true" description="Modo oscuro para la interfaz" />
+    
+    <!-- Feature 5: Exportación de datos -->
+    <feature uid="data-export" enable="false" description="Exportación de datos a diferentes formatos">
+        <security>
+            <role name="admin" />
+        </security>
+    </feature>
+    
+    <!-- Feature 6: Integración con sistemas externos -->
+    <feature uid="external-integration" enable="false" description="Integración con sistemas externos">
+        <security>
+            <role name="admin" />
+        </security>
+    </feature>
+    
+    <!-- Feature 7: Funcionalidades premium (con estrategia de activación) -->
+    <feature uid="premium-features" enable="false" description="Funcionalidades premium">
+        <flipstrategy class="org.ff4j.strategy.el.ExpressionFlipStrategy">
+            <param name="expression" value="user.isPremium()" />
+        </flipstrategy>
+    </feature>
+    
+    <!-- Feature 8: Control de versión A/B -->
+    <feature uid="version-b" enable="false" description="Activar versión B (desactivado = versión A)" />
+    
+    <!-- Propiedades -->
+    <properties>
+        <property name="app.theme" value="light" description="Tema de la aplicación" />
+        <property name="app.max-items-per-page" value="10" type="int" description="Número máximo de elementos por página" />
+        <property name="service.api-url" value="http://api.example.com" description="URL del servicio de API" />
+        <property name="app.cache-time" value="300" type="int" description="Tiempo de caché en segundos" />
+        <property name="app.welcome-message" value="Bienvenido a WebLogic Features" description="Mensaje de bienvenida" />
+        <property name="app.version-a-url" value="http://localhost:8080/version-a/" description="URL de la versión A" />
+        <property name="app.version-b-url" value="http://localhost:8080/version-b/" description="URL de la versión B" />
+    </properties>
+    
+</features>

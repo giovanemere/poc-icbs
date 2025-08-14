@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard WebLogic - Selección</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .dashboard-option {
+            display: inline-block;
+            margin: 15px;
+            padding: 20px 30px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .dashboard-option:hover {
+            background: #45a049;
+        }
+        .dashboard-option.advanced {
+            background: #2196F3;
+        }
+        .dashboard-option.advanced:hover {
+            background: #1976D2;
+        }
+        .description {
+            margin-top: 20px;
+            color: #666;
+            line-height: 1.6;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+        }
+        .status-card.warning {
+            border-left-color: #ffc107;
+        }
+        .status-card.error {
+            border-left-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Dashboard WebLogic Integrado</h1>
+        <p>Selecciona el dashboard que deseas usar:</p>
+        
+        <a href="traffic-dashboard.html" class="dashboard-option advanced">
+            📊 Dashboard Profesional
+        </a>
+        
+        <a href="simple-dashboard.html" class="dashboard-option">
+            📈 Dashboard Básico
+        </a>
+        
+        <div class="description">
+            <p><strong>Dashboard Profesional:</strong> Monitoreo avanzado con métricas en tiempo real, gráficos interactivos y gestión de A/B Testing.</p>
+            <p><strong>Dashboard Básico:</strong> Vista simplificada con información esencial del estado de los servicios.</p>
+        </div>
+        
+        <div class="status-grid">
+            <div class="status-card">
+                <h4>🔄 HAProxy</h4>
+                <p>Load Balancer Activo</p>
+            </div>
+            <div class="status-card">
+                <h4>🗄️ WebLogic A/B</h4>
+                <p>Servidores Funcionando</p>
+            </div>
+            <div class="status-card">
+                <h4>🗃️ Oracle DB</h4>
+                <p>Base de Datos Activa</p>
+            </div>
+            <div class="status-card">
+                <h4>⚙️ Integrated Manager</h4>
+                <p>Gestión Disponible</p>
+            </div>
+        </div>
+        
+        <hr style="margin: 30px 0;">
+        
+        <h3>🔗 Enlaces Útiles del Sistema</h3>
+        <p>
+            <a href="http://localhost:8090" target="_blank" style="margin: 5px; padding: 8px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 4px;">HAProxy Frontend</a>
+            <a href="http://localhost:8414/stats" target="_blank" style="margin: 5px; padding: 8px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 4px;">HAProxy Stats</a>
+            <a href="http://localhost:8092" target="_blank" style="margin: 5px; padding: 8px 15px; background: #dc3545; color: white; text-decoration: none; border-radius: 4px;">Panel Admin</a>
+        </p>
+        <p>
+            <a href="http://localhost:7003/console" target="_blank" style="margin: 5px; padding: 8px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">WebLogic A</a>
+            <a href="http://localhost:7004/console" target="_blank" style="margin: 5px; padding: 8px 15px; background: #6c757d; color: white; text-decoration: none; border-radius: 4px;">WebLogic B</a>
+            <a href="http://localhost:5500/em" target="_blank" style="margin: 5px; padding: 8px 15px; background: #fd7e14; color: white; text-decoration: none; border-radius: 4px;">Oracle EM</a>
+        </p>
+        
+        <div style="margin-top: 30px; padding: 15px; background: #e9ecef; border-radius: 5px;">
+            <small>
+                <strong>Entorno Integrado:</strong> Todos los servicios están ejecutándose en puertos diferentes para evitar conflictos.<br>
+                <strong>Última actualización:</strong> <span id="timestamp"></span>
+            </small>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

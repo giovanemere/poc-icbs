@@ -1,0 +1,288 @@
+version: '3.8'
+
+services:
+  weblogic-a:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_ENV: version-a
+        DOMAIN_NAME: ${WEBLOGIC_A_DOMAIN_NAME:-base_domain_a}
+        VERSION: A
+        APP_VERSION: ${APP_VERSION_A:-1.0.0}
+        BUILD_DATE: ${BUILD_DATE}
+        BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
+        BUILD_COMMIT: ${BUILD_COMMIT:-latest}
+    image: weblogic-version-a:${BUILD_VERSION:-latest}
+    container_name: weblogic-a
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_A_ADMIN_PASSWORD:-welcome123}
+      - VERSION=A
+      - BUILD_ENV=version-a
+      - DOMAIN_NAME=${WEBLOGIC_A_DOMAIN_NAME:-base_domain_a}
+      - WEBLOGIC_MEMORY_ARGS=${WEBLOGIC_MEMORY_ARGS}
+      - WEBLOGIC_JAVA_OPTIONS=${WEBLOGIC_JAVA_OPTIONS}
+      - TZ=${TZ:-America/Mexico_City}
+      - LANG=${LANG:-es_ES.UTF-8}
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-a-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-a-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+      - ${WEBLOGIC_A_DATA_DIR:-./data/weblogic-a}:/u01/oracle/user_projects/domains/base_domain/data:rw
+    networks:
+      weblogic-network:
+        ipv4_address: ${WEBLOGIC_A_HOST:-172.23.0.4}
+    ports:
+      - "${EXTERNAL_WEBLOGIC_A_PORT:-7001}:${WEBLOGIC_A_PORT:-7001}"
+    depends_on:
+      - orcldb
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${WEBLOGIC_A_MEMORY_LIMIT:-2g}
+          cpus: '${WEBLOGIC_A_CPU_LIMIT:-2}'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+
+  weblogic-b:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_ENV: version-b
+        DOMAIN_NAME: ${WEBLOGIC_B_DOMAIN_NAME:-base_domain_b}
+        VERSION: B
+        APP_VERSION: ${APP_VERSION_B:-2.0.0-beta}
+        BUILD_DATE: ${BUILD_DATE}
+        BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
+        BUILD_COMMIT: ${BUILD_COMMIT:-latest}
+    image: weblogic-version-b:${BUILD_VERSION:-latest}
+    container_name: weblogic-b
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_B_ADMIN_PASSWORD:-welcome123}
+      - VERSION=B
+      - BUILD_ENV=version-b
+      - DOMAIN_NAME=${WEBLOGIC_B_DOMAIN_NAME:-base_domain_b}
+      - WEBLOGIC_MEMORY_ARGS=${WEBLOGIC_MEMORY_ARGS}
+      - WEBLOGIC_JAVA_OPTIONS=${WEBLOGIC_JAVA_OPTIONS}
+      - TZ=${TZ:-America/Mexico_City}
+      - LANG=${LANG:-es_ES.UTF-8}
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-b-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-b-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+      - ${WEBLOGIC_B_DATA_DIR:-./data/weblogic-b}:/u01/oracle/user_projects/domains/base_domain/data:rw
+    networks:
+      weblogic-network:
+        ipv4_address: ${WEBLOGIC_B_HOST:-172.23.0.3}
+    ports:
+      - "${EXTERNAL_WEBLOGIC_B_PORT:-7002}:${WEBLOGIC_B_PORT:-7001}"
+    depends_on:
+      - orcldb
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${WEBLOGIC_B_MEMORY_LIMIT:-2g}
+          cpus: '${WEBLOGIC_B_CPU_LIMIT:-2}'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+
+  weblogic-ff:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_ENV: feature-flags
+        DOMAIN_NAME: base_domain_ff
+        VERSION: FF
+        APP_VERSION: ${BUILD_VERSION:-1.0.0}
+        BUILD_DATE: ${BUILD_DATE}
+        BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
+        BUILD_COMMIT: ${BUILD_COMMIT:-latest}
+    image: weblogic-feature-flags:${BUILD_VERSION:-latest}
+    container_name: weblogic-ff
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_A_ADMIN_PASSWORD:-welcome123}
+      - VERSION=FF
+      - BUILD_ENV=feature-flags
+      - DOMAIN_NAME=base_domain_ff
+      - WEBLOGIC_MEMORY_ARGS=${WEBLOGIC_MEMORY_ARGS}
+      - WEBLOGIC_JAVA_OPTIONS=${WEBLOGIC_JAVA_OPTIONS}
+      - FF4J_CONSOLE_ENABLED=${FF4J_CONSOLE_ENABLED:-true}
+      - FF4J_AUDIT_ENABLED=${FF4J_AUDIT_ENABLED:-true}
+      - FF4J_MONITORING_ENABLED=${FF4J_MONITORING_ENABLED:-true}
+      - TZ=${TZ:-America/Mexico_City}
+      - LANG=${LANG:-es_ES.UTF-8}
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-ff-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-ff-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      weblogic-network:
+        ipv4_address: 172.23.0.6
+    ports:
+      - "7003:7001"
+    depends_on:
+      - orcldb
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${WEBLOGIC_A_MEMORY_LIMIT:-2g}
+          cpus: '${WEBLOGIC_A_CPU_LIMIT:-2}'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: 10s
+      retries: 3
+      start_period: 5m
+
+  haproxy:
+    build:
+      context: ../haproxy
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE}
+        BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
+    image: haproxy-advanced:${BUILD_VERSION:-latest}
+    container_name: haproxy
+    environment:
+      - HAPROXY_STATS_USER=${HAPROXY_STATS_USER:-admin}
+      - HAPROXY_STATS_PASSWORD=${HAPROXY_STATS_PASSWORD:-admin123}
+      - DEFAULT_STRATEGY=${DEFAULT_STRATEGY:-roundrobin}
+      - DEFAULT_WEIGHT_A=${DEFAULT_WEIGHT_A:-50}
+      - DEFAULT_WEIGHT_B=${DEFAULT_WEIGHT_B:-50}
+      - TZ=${TZ:-America/Mexico_City}
+    ports:
+      - "${EXTERNAL_HTTP_PORT:-8080}:${HAPROXY_HTTP_PORT:-80}"
+      - "${EXTERNAL_HTTPS_PORT:-8443}:${HAPROXY_HTTPS_PORT:-443}"
+      - "${EXTERNAL_STATS_PORT:-8404}:${HAPROXY_STATS_PORT:-8404}"
+      - "${EXTERNAL_API_PORT:-8081}:${HAPROXY_API_PORT:-8081}"
+      - "${EXTERNAL_UI_PORT:-8082}:${HAPROXY_UI_PORT:-8082}"
+    volumes:
+      - ../haproxy/config:/usr/local/etc/haproxy:z
+      - ../haproxy/scripts:/scripts:z
+      - ../haproxy/config/certs:/etc/ssl/certs:z
+    networks:
+      weblogic-network:
+        ipv4_address: ${HAPROXY_HOST:-172.23.0.5}
+    depends_on:
+      - weblogic-a
+      - weblogic-b
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${HAPROXY_MEMORY_LIMIT:-512m}
+          cpus: '${HAPROXY_CPU_LIMIT:-1}'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8404/stats"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Servicio dedicado para el dashboard profesional
+  dashboard:
+    build:
+      context: ../haproxy/dashboard
+      dockerfile: Dockerfile
+      args:
+        BUILD_DATE: ${BUILD_DATE}
+        BUILD_VERSION: ${BUILD_VERSION:-1.0.0}
+    image: dashboard-professional:${BUILD_VERSION:-latest}
+    container_name: dashboard
+    environment:
+      - TZ=${TZ:-America/Mexico_City}
+      - DASHBOARD_REFRESH_INTERVAL=${DASHBOARD_REFRESH_INTERVAL:-5}
+      - DASHBOARD_API_TIMEOUT=${DASHBOARD_API_TIMEOUT:-10}
+    ports:
+      - "${EXTERNAL_DASHBOARD_PORT:-8001}:${DASHBOARD_PORT:-8000}"
+    networks:
+      weblogic-network:
+        ipv4_address: ${DASHBOARD_HOST:-172.23.0.7}
+    depends_on:
+      - haproxy
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${DASHBOARD_MEMORY_LIMIT:-256m}
+          cpus: '${DASHBOARD_CPU_LIMIT:-0.5}'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: ${HEALTH_CHECK_INTERVAL:-30s}
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  orcldb:
+    image: edissonz8809/oracle-express-db:latest
+    container_name: orcldb
+    environment:
+      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
+      - ORACLE_PDB=${ORACLE_PDB:-ORCLPDB1}
+      - ORACLE_PWD=${ORACLE_PWD:-Oracle123}
+      - ORACLE_CHARACTERSET=${ORACLE_CHARACTERSET:-AL32UTF8}
+      - ORACLE_EDITION=${ORACLE_EDITION:-enterprise}
+      - TZ=${TZ:-America/Mexico_City}
+    ports:
+      - "${EXTERNAL_ORACLE_PORT:-1521}:${ORACLE_PORT:-1521}"
+      - "${EXTERNAL_ORACLE_EM_PORT:-5500}:${ORACLE_EM_PORT:-5500}"
+    volumes:
+      - db-oracle:${ORACLE_DATA_DIR:-/opt/oracle/oradata}
+      - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
+      - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
+    networks:
+      weblogic-network:
+        ipv4_address: ${ORACLE_HOST:-172.23.0.2}
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${ORACLE_MEMORY_LIMIT:-2g}
+          cpus: '${ORACLE_CPU_LIMIT:-2}'
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_PWD:-Oracle123}@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 2m
+
+networks:
+  weblogic-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${SUBNET:-172.23.0.0/16}
+
+volumes:
+  db-oracle:
+    driver: local
+  weblogic-a-logs:
+    driver: local
+  weblogic-b-logs:
+    driver: local
+  weblogic-ff-logs:
+    driver: local
+  weblogic-a-monitoring:
+    driver: local
+  weblogic-b-monitoring:
+    driver: local
+  weblogic-ff-monitoring:
+    driver: local

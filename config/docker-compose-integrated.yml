@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  orcldb:
+    image: edissonz8809/oracle-express-db:latest
+    container_name: orcldb-integrated
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    environment:
+      - ORACLE_PWD=welcome1
+    volumes:
+      - db-oracle:/opt/oracle/oradata
+      - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
+      - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
+    networks:
+      weblogic-network:
+        ipv4_address: 172.24.0.2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/welcome1@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  weblogic-a:
+    image: weblogic-local:latest
+    container_name: weblogic-a-integrated
+    environment:
+      - ADMIN_PASSWORD=welcome1
+      - VERSION=A
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-a-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-a-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      weblogic-network:
+        ipv4_address: 172.24.0.4
+    ports:
+      - "7003:7001"  # Puerto diferente para evitar conflictos
+    depends_on:
+      - orcldb
+    restart: unless-stopped
+
+  weblogic-b:
+    image: weblogic-local:latest
+    container_name: weblogic-b-integrated
+    environment:
+      - ADMIN_PASSWORD=welcome1
+      - VERSION=B
+    volumes:
+      - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
+      - ../deploy:/u01/oracle/deploy:rw
+      - ../container-scripts:/u01/oracle/container-scripts:rw
+      - weblogic-b-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
+      - weblogic-b-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
+    networks:
+      weblogic-network:
+        ipv4_address: 172.24.0.3
+    ports:
+      - "7004:7001"  # Puerto diferente para evitar conflictos
+    depends_on:
+      - orcldb
+    restart: unless-stopped
+
+  haproxy:
+    image: edissonz8809/haproxy-advanced:latest
+    container_name: haproxy-integrated
+    ports:
+      - "8090:80"     # HTTP Frontend - puerto diferente
+      - "8414:8404"   # HAProxy Stats - puerto diferente
+      - "8091:8081"   # API de administración - puerto diferente
+      - "8092:8082"   # UI de administración - puerto diferente
+    volumes:
+      - ../haproxy/config:/usr/local/etc/haproxy:z
+      - ../haproxy/scripts:/scripts:z
+      - ../haproxy/config/certs:/etc/ssl/certs:z
+    networks:
+      weblogic-network:
+        ipv4_address: 172.24.0.5
+    depends_on:
+      - weblogic-a
+      - weblogic-b
+    restart: unless-stopped
+
+  dashboard:
+    image: nginx:alpine
+    container_name: dashboard-integrated
+    ports:
+      - "8011:80"  # Puerto diferente para evitar conflictos
+    volumes:
+      - ../haproxy/dashboard:/usr/share/nginx/html:ro
+    networks:
+      weblogic-network:
+        ipv4_address: 172.24.0.6
+    depends_on:
+      - haproxy
+    restart: unless-stopped
+
+  # Servicio de gestión integrada
+  integrated-manager:
+    image: alpine:latest
+    container_name: integrated-manager
+    volumes:
+      - ../:/workspace:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    working_dir: /workspace
+    command: |
+      sh -c "
+        apk add --no-cache bash curl docker-cli docker-compose python3 py3-pip py3-requests &&
+        echo 'Integrated Manager Ready - Use: docker-compose exec integrated-manager ./run-integrated-command.sh' &&
+        tail -f /dev/null
+      "
+    networks:
+      weblogic-network:
+        ipv4_address: 172.24.0.10
+    depends_on:
+      - weblogic-a
+      - weblogic-b
+      - haproxy
+      - orcldb
+      - dashboard
+    restart: unless-stopped
+
+networks:
+  weblogic-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.24.0.0/16
+
+volumes:
+  db-oracle:
+    driver: local
+  weblogic-a-logs:
+    driver: local
+  weblogic-b-logs:
+    driver: local
+  weblogic-a-monitoring:
+    driver: local
+  weblogic-b-monitoring:
+    driver: local

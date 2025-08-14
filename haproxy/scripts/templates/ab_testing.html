@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block title %}Configuración de Testing A/B{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Configurar Testing A/B</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('ab_testing') }}">
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="enabled" name="enabled" {% if config.enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="enabled">Habilitar Testing A/B</label>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="weight_a" class="form-label">Peso para la versión A: <span id="weight_a_value">{{ config.weight_a }}</span>%</label>
+                        <input type="range" class="form-range" min="0" max="100" step="5" id="weight_a" name="weight_a" value="{{ config.weight_a }}">
+                        <div class="progress mt-2">
+                            <div class="progress-bar bg-primary" role="progressbar" id="progress_a" style="width: {{ config.weight_a }}%">
+                                A: {{ config.weight_a }}%
+                            </div>
+                            <div class="progress-bar bg-secondary" role="progressbar" id="progress_b" style="width: {{ 100 - config.weight_a }}%">
+                                B: {{ 100 - config.weight_a }}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Guardar Configuración</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold">Información</h6>
+            </div>
+            <div class="card-body">
+                <h5>¿Qué es el Testing A/B?</h5>
+                <p>El Testing A/B es una metodología que permite comparar dos versiones de una aplicación para determinar cuál ofrece mejor rendimiento o experiencia de usuario.</p>
+                
+                <h5>Recomendaciones</h5>
+                <ul>
+                    <li>Define métricas claras antes de iniciar el test</li>
+                    <li>Ejecuta el test durante tiempo suficiente para obtener datos significativos</li>
+                    <li>Utiliza cookies para mantener consistencia en la experiencia del usuario</li>
+                    <li>Prueba cambios pequeños y específicos</li>
+                </ul>
+                
+                <h5>Configuración Actual</h5>
+                <p>
+                    Estado: 
+                    {% if config.enabled %}
+                        <span class="badge bg-success">Activo</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactivo</span>
+                    {% endif %}
+                </p>
+                <p>Distribución: {{ config.weight_a }}% para A, {{ 100 - config.weight_a }}% para B</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const weightSlider = document.getElementById('weight_a');
+        const weightValue = document.getElementById('weight_a_value');
+        const progressA = document.getElementById('progress_a');
+        const progressB = document.getElementById('progress_b');
+        
+        weightSlider.addEventListener('input', function() {
+            const value = this.value;
+            weightValue.textContent = value;
+            progressA.style.width = value + '%';
+            progressA.textContent = 'A: ' + value + '%';
+            progressB.style.width = (100 - value) + '%';
+            progressB.textContent = 'B: ' + (100 - value) + '%';
+        });
+    });
+</script>
+{% endblock %}

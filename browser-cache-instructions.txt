@@ -1,0 +1,26 @@
+# Instrucciones para limpiar caché en navegadores
+
+Para asegurar que los cambios en las aplicaciones se reflejen correctamente, es recomendable limpiar la caché del navegador:
+
+## Chrome
+1. Presiona Ctrl+Shift+Delete (Windows/Linux) o Cmd+Shift+Delete (Mac)
+2. Selecciona "Cookies y datos de sitios" y "Imágenes y archivos almacenados en caché"
+3. Haz clic en "Borrar datos"
+
+## Firefox
+1. Presiona Ctrl+Shift+Delete (Windows/Linux) o Cmd+Shift+Delete (Mac)
+2. Selecciona "Cookies" y "Caché"
+3. Haz clic en "Limpiar ahora"
+
+## Safari
+1. Ve a Safari > Preferencias > Avanzado
+2. Marca "Mostrar menú Desarrollo en la barra de menús"
+3. Ve a Desarrollo > Vaciar cachés
+
+## Edge
+1. Presiona Ctrl+Shift+Delete
+2. Selecciona "Cookies y datos guardados" y "Archivos e imágenes en caché"
+3. Haz clic en "Borrar ahora"
+
+## Alternativa: Modo incógnito/privado
+Otra opción es utilizar el modo incógnito o privado del navegador para probar las aplicaciones sin caché.
