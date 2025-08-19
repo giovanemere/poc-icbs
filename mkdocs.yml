@@ -1,0 +1,26 @@
+site_name: 'poc-icbs Documentation'
+site_description: 'Sistema Core Banking Integrado - Oracle WebLogic'
+
+nav:
+  - Home: index.md
+  - Integration: integration.md
+  - Dashboard: dashboard.md
+  - System: system.md
+
+plugins:
+  - techdocs-core
+  - search
+
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: blue
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - pymdownx.superfences
+
+repo_url: https://github.com/giovanemere/poc-icbs
+edit_uri: edit/main/docs/

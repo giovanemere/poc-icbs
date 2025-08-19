@@ -2,32 +2,22 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: poc-icbs
-  description: Sistema Core Banking Integrado - Oracle WebLogic
+  title: POC ICBS
+  description: Sistema Core Banking Integrado
   annotations:
     github.com/project-slug: giovanemere/poc-icbs
     backstage.io/techdocs-ref: dir:.
-  tags:
-    - backend
-    - spring-boot
-    - poc
-    - billpay
 spec:
   type: service
-  lifecycle: experimental
-  owner: ia-ops-team
-  system: billpay-system
-  providesApis:
-    - poc-icbs-api
-  consumesApis:
-    - database-api
+  lifecycle: production
+  owner: platform-team
+  system: banking
 ---
 apiVersion: backstage.io/v1alpha1
-kind: API
+kind: System
 metadata:
-  name: poc-icbs-api
-  description: REST API for poc-icbs
+  name: banking
+  title: Banking System
+  description: Sistema banking
 spec:
-  type: openapi
-  lifecycle: experimental
-  owner: ia-ops-team
-  system: billpay-system
+  owner: platform-team
