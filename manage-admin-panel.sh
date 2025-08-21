@@ -65,7 +65,7 @@ show_urls() {
     echo -e "${BLUE}🌐 URLs del Sistema Completo${NC}"
     echo ""
     echo -e "${GREEN}🎛️ Dashboard Unificado (RECOMENDADO):${NC}"
-    echo -e "  ${PURPLE}http://localhost:8085/unified-dashboard-fixed.html${NC}  ⭐ Dashboard Principal"
+    echo -e "  ${PURPLE}http://localhost:8085/unified-dashboard.html${NC}  ⭐ Dashboard Principal"
     echo -e "  ${CYAN}📊 Control A/B Testing + Canary + URLs Activas + Métricas${NC}"
     echo ""
     echo -e "${GREEN}📊 Dashboard de Tráfico WebLogic:${NC}"
@@ -380,8 +380,8 @@ show_status() {
         echo -e "${GREEN}✅ Dashboard Unificado: CORRIENDO (PID: $PID)${NC}"
         
         # Verificar conectividad del dashboard
-        if curl -s http://localhost:8085/unified-dashboard-fixed.html > /dev/null 2>&1; then
-            echo -e "${GREEN}   🎛️ Dashboard accesible en http://localhost:8085/unified-dashboard-fixed.html${NC}"
+        if curl -s http://localhost:8085/unified-dashboard.html > /dev/null 2>&1; then
+            echo -e "${GREEN}   🎛️ Dashboard accesible en http://localhost:8085/unified-dashboard.html${NC}"
         else
             echo -e "${YELLOW}   ⚠️  Dashboard no responde${NC}"
         fi
@@ -888,7 +888,7 @@ case "$1" in
         echo -e "${GREEN}🎉 Sistema completo iniciado${NC}"
         echo ""
         echo -e "${PURPLE}🎯 DASHBOARD PRINCIPAL:${NC}"
-        echo -e "${GREEN}   🎛️ http://localhost:8085/unified-dashboard-fixed.html${NC}"
+        echo -e "${GREEN}   🎛️ http://localhost:8085/unified-dashboard.html${NC}"
         echo -e "${GREEN}   📊 http://localhost:8084/${NC}"
         echo ""
         show_urls

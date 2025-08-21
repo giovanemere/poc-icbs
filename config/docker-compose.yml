@@ -1,12 +1,62 @@
 version: '3.8'
 
+# =============================================================================
+# Docker Compose Actualizado - Sin IPs Quemadas
+# Proyecto: Oracle WebLogic con Testing A/B, Canary Deployment y Feature Flags
+# =============================================================================
+
 services:
-  weblogic-a:
-    image: edissonz8809/weblogic-feature-flags:latest
-    container_name: weblogic-a
+  # =============================================================================
+  # Oracle Database
+  # =============================================================================
+  orcldb:
+    image: edissonz8809/oracle-express-db:latest
+    container_name: orcldb-integrated
+    hostname: oracle-db
+    ports:
+      - "${EXTERNAL_ORACLE_PORT:-1521}:1521"
+      - "${EXTERNAL_ORACLE_EM_PORT:-5500}:5500"
     environment:
-      - ADMIN_PASSWORD=welcome1
+      - ORACLE_PWD=${ORACLE_PWD:-welcome1}
+      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
+      - ORACLE_PDB=${ORACLE_PDB:-ORCLPDB1}
+      - ORACLE_CHARACTERSET=${ORACLE_CHARACTERSET:-AL32UTF8}
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
+      - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
+      - oracle-logs:/opt/oracle/diag
+    networks:
+      weblogic-network:
+        aliases:
+          - oracle-db
+          - database
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_PWD:-welcome1}@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # =============================================================================
+  # WebLogic Server A (Versión Estable)
+  # =============================================================================
+  weblogic-a:
+    image: weblogic-version-a:latest
+    container_name: weblogic-a-integrated
+    hostname: weblogic-a
+    environment:
+      - ADMIN_PASSWORD=${WEBLOGIC_A_ADMIN_PASSWORD:-welcome1}
+      - ADMIN_USER=${WEBLOGIC_A_ADMIN_USER:-weblogic}
+      - DOMAIN_NAME=${WEBLOGIC_A_DOMAIN_NAME:-base_domain_a}
       - VERSION=A
+      - APP_VERSION=${APP_VERSION_A:-1.0.0}
+      - ORACLE_HOST=oracle-db
+      - ORACLE_PORT=1521
+      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
+      - ORACLE_USER=${ORACLE_USER:-system}
+      - ORACLE_PASSWORD=${ORACLE_PWD:-welcome1}
     volumes:
       - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
       - ../deploy:/u01/oracle/deploy:rw
@@ -15,19 +65,40 @@ services:
       - weblogic-a-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
     networks:
       weblogic-network:
-        ipv4_address: 172.23.0.4
+        aliases:
+          - weblogic-a
+          - weblogic-stable
     ports:
-      - "7001:7001"
+      - "${EXTERNAL_WEBLOGIC_A_PORT:-7001}:7001"
     depends_on:
-      - orcldb
+      orcldb:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
 
+  # =============================================================================
+  # WebLogic Server B (Versión Canary/Beta)
+  # =============================================================================
   weblogic-b:
-    image: edissonz8809/weblogic-feature-flags:latest
-    container_name: weblogic-b
+    image: weblogic-version-b:latest
+    container_name: weblogic-b-integrated
+    hostname: weblogic-b
     environment:
-      - ADMIN_PASSWORD=welcome1
+      - ADMIN_PASSWORD=${WEBLOGIC_B_ADMIN_PASSWORD:-welcome1}
+      - ADMIN_USER=${WEBLOGIC_B_ADMIN_USER:-weblogic}
+      - DOMAIN_NAME=${WEBLOGIC_B_DOMAIN_NAME:-base_domain_b}
       - VERSION=B
+      - APP_VERSION=${APP_VERSION_B:-2.0.0-beta}
+      - ORACLE_HOST=oracle-db
+      - ORACLE_PORT=1521
+      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
+      - ORACLE_USER=${ORACLE_USER:-system}
+      - ORACLE_PASSWORD=${ORACLE_PWD:-welcome1}
     volumes:
       - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
       - ../deploy:/u01/oracle/deploy:rw
@@ -36,71 +107,102 @@ services:
       - weblogic-b-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
     networks:
       weblogic-network:
-        ipv4_address: 172.23.0.3
+        aliases:
+          - weblogic-b
+          - weblogic-canary
     ports:
-      - "7002:7001"
+      - "${EXTERNAL_WEBLOGIC_B_PORT:-7002}:7001"
     depends_on:
-      - orcldb
+      orcldb:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7001/console"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
 
+  # =============================================================================
+  # HAProxy Load Balancer
+  # =============================================================================
   haproxy:
-    image: edissonz8809/haproxy-advanced:latest
-    container_name: haproxy
+    image: haproxy-advanced:latest
+    container_name: haproxy-integrated
+    hostname: haproxy
     ports:
-      - "8080:80"     # HTTP Frontend
-      - "8443:443"    # HTTPS Frontend
-      - "8404:8404"   # HAProxy Stats
-      - "8081:8081"   # API de administración
-      - "8082:8082"   # UI de administración
+      - "${EXTERNAL_HTTP_PORT:-8100}:80"      # Frontend Principal
+      - "${EXTERNAL_HTTPS_PORT:-8443}:443"    # HTTPS Frontend
+      - "${EXTERNAL_STATS_PORT:-8404}:8404"   # HAProxy Stats
+      - "${EXTERNAL_API_PORT:-8081}:8081"     # API de administración
+      - "${EXTERNAL_UI_PORT:-8082}:8082"      # UI de administración
+    environment:
+      - HAPROXY_STATS_USER=${HAPROXY_STATS_USER:-admin}
+      - HAPROXY_STATS_PASSWORD=${HAPROXY_STATS_PASSWORD:-admin123}
+      - DEFAULT_STRATEGY=${DEFAULT_STRATEGY:-roundrobin}
+      - DEFAULT_WEIGHT_A=${DEFAULT_WEIGHT_A:-50}
+      - DEFAULT_WEIGHT_B=${DEFAULT_WEIGHT_B:-50}
+      - WEBLOGIC_A_HOST=weblogic-a
+      - WEBLOGIC_B_HOST=weblogic-b
+      - WEBLOGIC_A_PORT=7001
+      - WEBLOGIC_B_PORT=7001
     volumes:
       - ../haproxy/config:/usr/local/etc/haproxy:z
       - ../haproxy/scripts:/scripts:z
       - ../haproxy/config/certs:/etc/ssl/certs:z
     networks:
       weblogic-network:
-        ipv4_address: 172.23.0.5
+        aliases:
+          - haproxy
+          - loadbalancer
     depends_on:
-      - weblogic-a
-      - weblogic-b
-    restart: unless-stopped
-
-  orcldb:
-    image: edissonz8809/oracle-express-db:latest
-    container_name: orcldb
-    ports:
-      - "1521:1521"
-      - "5500:5500"
-    environment:
-      - ORACLE_PWD=welcome1
-    volumes:
-      - db-oracle:/opt/oracle/oradata
-      - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
-      - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
-    networks:
-      weblogic-network:
-        ipv4_address: 172.23.0.2
+      weblogic-a:
+        condition: service_healthy
+      weblogic-b:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "sqlplus", "-L", "system/welcome1@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      test: ["CMD", "curl", "-f", "http://localhost:8404/stats"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 60s
 
+# =============================================================================
+# Redes
+# =============================================================================
 networks:
   weblogic-network:
     driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: weblogic-br
     ipam:
+      driver: default
       config:
-        - subnet: 172.23.0.0/16
+        - subnet: ${SUBNET:-172.25.0.0/16}
+          gateway: ${GATEWAY:-172.25.0.1}
+    labels:
+      - "project=weblogic-integrated"
+      - "environment=${ENVIRONMENT:-development}"
 
+# =============================================================================
+# Volúmenes
+# =============================================================================
 volumes:
-  db-oracle:
+  # Oracle Database
+  oracle-data:
     driver: local
+  oracle-logs:
+    driver: local
+
+  # WebLogic A
   weblogic-a-logs:
     driver: local
-  weblogic-b-logs:
-    driver: local
   weblogic-a-monitoring:
+    driver: local
+
+  # WebLogic B
+  weblogic-b-logs:
     driver: local
   weblogic-b-monitoring:
     driver: local
