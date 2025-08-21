@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Panel Connection</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test Panel Connection to API</h1>
+    
+    <button onclick="testHealth()">Test Health Check</button>
+    <button onclick="testStatus()">Test Status</button>
+    <button onclick="testABTesting()">Test A/B Testing</button>
+    <button onclick="testCanary()">Test Canary</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        const API_BASE = 'http://localhost:8093';
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            resultsDiv.appendChild(div);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        async function testHealth() {
+            try {
+                addResult('Testing health check...', 'info');
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                addResult(`✅ Health Check: ${data.status} - ${data.service}`, 'success');
+            } catch (error) {
+                addResult(`❌ Health Check Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testStatus() {
+            try {
+                addResult('Testing system status...', 'info');
+                const response = await fetch(`${API_BASE}/api/status`);
+                const data = await response.json();
+                addResult(`✅ Status: HAProxy=${data.services.haproxy}, WebLogic A=${data.services.weblogic_a}, WebLogic B=${data.services.weblogic_b}`, 'success');
+            } catch (error) {
+                addResult(`❌ Status Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testABTesting() {
+            try {
+                addResult('Testing A/B Testing configuration...', 'info');
+                const response = await fetch(`${API_BASE}/api/ab-testing`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        enabled: true,
+                        version_a_percentage: 60
+                    })
+                });
+                const data = await response.json();
+                addResult(`✅ A/B Testing: ${data.message} (A: ${data.version_a_percentage}%, B: ${data.version_b_percentage}%)`, 'success');
+            } catch (error) {
+                addResult(`❌ A/B Testing Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCanary() {
+            try {
+                addResult('Testing Canary Deployment...', 'info');
+                const response = await fetch(`${API_BASE}/api/canary`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        enabled: true,
+                        percentage: 25
+                    })
+                });
+                const data = await response.json();
+                addResult(`✅ Canary: ${data.message}`, 'success');
+            } catch (error) {
+                addResult(`❌ Canary Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test automático al cargar
+        window.onload = function() {
+            addResult('🚀 Starting automatic tests...', 'info');
+            setTimeout(testHealth, 1000);
+            setTimeout(testStatus, 2000);
+            setTimeout(testABTesting, 3000);
+            setTimeout(testCanary, 4000);
+        };
+    </script>
+</body>
+</html>
