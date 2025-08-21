@@ -1,22 +1,71 @@
 # Docker para Oracle WebLogic con Testing A/B, Canary Deployment y Feature Flags
 
-Este proyecto proporciona un entorno Docker para Oracle WebLogic con soporte para estrategias avanzadas de despliegue como Testing A/B, Canary Deployment y Feature Flags utilizando HAProxy. Incluye modo oscuro en las interfaces de usuario y herramientas para build local.
+Este proyecto proporciona un entorno Docker para Oracle WebLogic con soporte para estrategias avanzadas de despliegue como Testing A/B, Canary Deployment y Feature Flags utilizando HAProxy. Incluye modo oscuro en las interfaces de usuario, herramientas para build local y sistema unificado de gestión.
 
-Verifica que los contenedores estén en ejecución:
+## 🚀 Inicio Rápido
+
+### **Comando Principal (Recomendado)**
 ```bash
-
-Para uso diario
-./manage-services.sh start    # Iniciar todo
-./manage-services.sh status   # Ver estado
-./manage-services.sh stop     # Detener todo
-
-Para desarrollo/debugging
-./manage-services.sh logs --follow haproxy  # Ver logs de HAProxy
-./manage-services.sh restart                # Reiniciar rápido
-./manage-services.sh update-haproxy         # Solo actualizar HAProxy
-
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
 ```
-   
+
+### **Parar Todo el Sistema**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./stop.sh
+```
+
+## 🔧 Comandos de Desarrollo
+
+### **Build WAR Files**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./scripts/build/build-wars.sh
+```
+
+### **Build Docker Images**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./build-latest.sh
+```
+
+### **Subir Servicios**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
+```
+
+### **Subir MkDocs para Desarrollo**
+```bash
+# Opción 1: Navegar al directorio del proyecto de documentación
+cd /path/to/mkdocs-project
+
+# Iniciar servidor de desarrollo MkDocs
+mkdocs serve --dev-addr=0.0.0.0:8000
+
+# Opción 2: Si tienes un script específico
+./start-mkdocs-dev.sh
+
+# Opción 3: Con Docker (si tienes imagen de MkDocs)
+docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
+
+# Opción 4: MkDocs con auto-reload
+mkdocs serve --dev-addr=0.0.0.0:8000 --livereload
+```
+
+**URLs de MkDocs:**
+- **Documentación Local**: `http://localhost:8000`
+- **Auto-reload**: Se actualiza automáticamente al guardar cambios
+- **Puerto por defecto**: 8000 (evita conflictos con WebLogic)
+
+## 📋 Scripts Disponibles
+
+| Script | Descripción | Uso |
+|--------|-------------|-----|
+| **`./start.sh`** | ⭐ **PRINCIPAL** - Inicia todo el sistema | Uso diario |
+| **`./stop.sh`** | Para todo el sistema completamente | Cuando termines |
+| `./start-unified-system.sh` | Script completo con logs detallados | Debugging |
+| `./verify-urls.sh` | Verifica configuración de URLs | Verificación |
+| `./check-images.sh` | Verifica imágenes Docker disponibles | Troubleshooting |
+| `./scripts/build/build-wars.sh` | Construye archivos WAR | Desarrollo |
+| `./build-latest.sh` | Construye imágenes Docker | Desarrollo |
+
 ## Arquitectura del Sistema
 
 ```
@@ -30,16 +79,16 @@ Para desarrollo/debugging
 ┌─────────────────────────────────────────────────────────────────────┐
 │                                                                     │
 │                            HAProxy                                  │
-│                      (172.23.0.5:80/443)                           │
+│                         (Puerto 8100)                              │
 │                                                                     │
 └───┬─────────────────────────────────┬───────────────────────────┬───┘
     │                                 │                           │
     ▼                                 ▼                           ▼
 ┌─────────────┐                 ┌─────────────┐             ┌─────────────┐
+│             │                 │             │             │ Dashboards  │
+│ WebLogic A  │                 │ WebLogic B  │             │Independientes│
+│  (7001)     │                 │  (7002)     │             │(8084-8093)  │
 │             │                 │             │             │             │
-│ WebLogic A  │                 │ WebLogic B  │             │  API de     │
-│(172.23.0.4) │                 │(172.23.0.3) │             │Administración│
-│             │                 │             │             │(8081/8082)  │
 └──────┬──────┘                 └──────┬──────┘             └─────────────┘
        │                               │
        └───────────────┬───────────────┘
@@ -48,16 +97,16 @@ Para desarrollo/debugging
                ┌───────────────┐
                │               │
                │  Oracle DB    │
-               │ (172.23.0.2)  │
+               │ (1521/5500)   │
                │               │
                └───────────────┘
 ```
 
-### Puertos Expuestos
+### Puertos Actualizados
 
 | Servicio | Puerto Interno | Puerto Externo | Descripción |
 |----------|----------------|----------------|-------------|
-| HAProxy | 80 | 8080 | HTTP Frontend |
+| HAProxy | 80 | **8100** | **Frontend Principal** ✅ |
 | HAProxy | 443 | 8443 | HTTPS Frontend |
 | HAProxy | 8404 | 8404 | Estadísticas de HAProxy |
 | HAProxy | 8081 | 8081 | API de Administración |
@@ -66,152 +115,86 @@ Para desarrollo/debugging
 | WebLogic B | 7001 | 7002 | Consola de Administración B |
 | Oracle DB | 1521 | 1521 | Listener de Oracle |
 | Oracle DB | 5500 | 5500 | Enterprise Manager |
+| Dashboard Unificado | - | 8085 | Dashboard Principal |
+| Dashboard de Tráfico | - | 8084 | Dashboard de Tráfico |
+| Panel HAProxy | - | 8092 | Panel de Administración |
+| API Admin | - | 8093 | API de Administración |
 
 ## URLs y Endpoints del Sistema
 
-### URLs de Acceso Principal
+### **🎛️ Dashboards Principales (Más Confiables)**
 
 | Componente | URL | Descripción |
 |------------|-----|-------------|
-| HAProxy Frontend | `http://localhost:8080` | Punto de entrada principal para todas las aplicaciones |
-| HAProxy Stats | `http://localhost:8404/stats` | Interfaz de estadísticas de HAProxy (admin/admin123) |
-| Panel de Administración | `http://localhost:8082` | Panel web para gestionar estrategias de despliegue |
-| Dashboard Profesional | `http://localhost:8080/dashboard/` | Dashboard profesional de tráfico y monitoreo |
-| Dashboard Directo | `http://localhost:8001/` | Acceso directo al dashboard (desarrollo/debug) |
-| API de Administración | `http://localhost:8081/api` | API REST para configurar HAProxy dinámicamente |
+| **Dashboard Unificado** | `http://localhost:8085/unified-dashboard-fixed.html` | ⭐ **Dashboard Principal** |
+| **Dashboard de Tráfico** | `http://localhost:8084/` | Dashboard de tráfico y monitoreo |
+| **Panel HAProxy** | `http://localhost:8092/` | Panel de administración HAProxy |
+| **API Admin** | `http://localhost:8093/api/health` | API de administración |
 
-### Consolas de Administración
-
-| Componente | URL | Descripción |
-|------------|-----|-------------|
-| WebLogic A | `http://localhost:7001/console` | Consola de administración de WebLogic A |
-| WebLogic B | `http://localhost:7002/console` | Consola de administración de WebLogic B |
-| Oracle DB | `http://localhost:5500/em` | Enterprise Manager de Oracle Database |
-
-### Aplicaciones a través de HAProxy
+### **🌐 Frontend Principal (Puerto 8100 - Actualizado)**
 
 | Aplicación | URL | Descripción |
 |------------|-----|-------------|
-| FF4J | `http://localhost:8080/ff4j-simple` | Aplicación FF4J |
-| Feature Flags | `http://localhost:8080/feature-flags` | Aplicación de Feature Flags |
-| WebLogic Features A | `http://localhost:8080/weblogic-features-a` | Versión A de la aplicación WebLogic Features |
-| WebLogic Features B | `http://localhost:8080/weblogic-features-b` | Versión B de la aplicación WebLogic Features |
-| Version A | `http://localhost:8080/version-a` | Versión A para pruebas de Canary/A-B |
-| Version B | `http://localhost:8080/version-b` | Versión B para pruebas de Canary/A-B |
+| **Frontend Principal** | `http://localhost:8100/` | **Punto de entrada principal** ✅ |
+| **Version A** | `http://localhost:8100/version-a/` | Versión A para pruebas ✅ |
+| **Version B** | `http://localhost:8100/version-b/` | Versión B para pruebas ✅ |
+| **Feature Flags** | `http://localhost:8100/feature-flags/` | Aplicación de Feature Flags ✅ |
+| **FF4J Simple** | `http://localhost:8100/ff4j-simple/` | Aplicación FF4J ✅ |
 
-### Acceso Directo a Nodos
+### **📈 Administración y Monitoreo**
 
 | Componente | URL | Descripción |
 |------------|-----|-------------|
-| WebLogic A | `http://172.23.0.4:7001` | Acceso directo al nodo WebLogic A |
-| WebLogic B | `http://172.23.0.3:7001` | Acceso directo al nodo WebLogic B |
-| HAProxy | `http://172.23.0.5:80` | Acceso directo al nodo HAProxy |
-| Oracle DB | `http://172.23.0.2:1521` | Acceso directo a Oracle Database (puerto 1521) |
+| HAProxy Stats | `http://localhost:8404/stats` | Estadísticas de HAProxy (admin/admin123) |
+| WebLogic A Console | `http://localhost:7001/console` | Consola de administración WebLogic A |
+| WebLogic B Console | `http://localhost:7002/console` | Consola de administración WebLogic B |
+| Oracle Enterprise Manager | `http://localhost:5500/em` | Enterprise Manager de Oracle Database |
 
-## Inicio Rápido
+### **📊 APIs del Dashboard de Tráfico**
 
-### 1. Construir y Desplegar el Entorno
+| API | URL | Descripción |
+|-----|-----|-------------|
+| Health Check | `http://localhost:8084/api/health` | Verificación de salud |
+| Estadísticas | `http://localhost:8084/api/stats` | Estadísticas en tiempo real |
+| A/B Testing | `http://localhost:8084/api/ab/enable` | API para A/B Testing |
+| Canary Deployment | `http://localhost:8084/api/canary/enable` | API para Canary Deployment |
+| Reset Stats | `http://localhost:8084/api/reset` | Reiniciar estadísticas |
 
+## 🎯 Flujo de Trabajo Recomendado
+
+### **1. Desarrollo Completo**
 ```bash
-# Clonar el repositorio (si aún no lo has hecho)
-git clone <repositorio>
-cd docker-for-oracle-weblogic
+# 1. Construir WAR files
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./scripts/build/build-wars.sh
 
-# Construir y desplegar los contenedores
-./start-all.sh
+# 2. Construir imágenes Docker
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./build-latest.sh
+
+# 3. Iniciar todo el sistema
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
 ```
 
-### 2. Verificar que Todo Esté Funcionando
-
+### **2. Uso Diario**
 ```bash
-# Verificar que los contenedores estén en ejecución
-docker-compose -f config/docker-compose.yml ps
+# Iniciar sistema
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
 
-# Verificar los logs de HAProxy
-docker logs haproxy
+# Verificar que todo funciona
+# - Abrir: http://localhost:8085/unified-dashboard-fixed.html
+# - Probar: http://localhost:8100/
 
-# Verificar que todas las URLs estén funcionando
-./scripts/check-urls.sh
+# Parar sistema al final del día
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./stop.sh
 ```
 
-### 3. Construir y Desplegar Aplicaciones WAR
-
-#### Construcción de Aplicaciones
-
-Para construir todas las aplicaciones WAR:
-
+### **3. Desarrollo con MkDocs**
 ```bash
-# Navegar al directorio raíz del proyecto
-cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic
+# En terminal separada para documentación
+cd /path/to/mkdocs-project
+mkdocs serve --dev-addr=0.0.0.0:8000
 
-# Construir todos los archivos WAR
-./scripts/build/build-wars.sh
-
-# Alternativa: Usar el nuevo script de build local
-./scripts/build/build-local.sh --all
+# Acceder a documentación en: http://localhost:8000
 ```
-
-Para construir aplicaciones específicas:
-
-```bash
-# Navegar al directorio raíz del proyecto
-cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic
-
-# Construir versión A
-./scripts/build/create-simple-wars.sh version-a
-
-# Construir versión B
-./scripts/build/create-simple-wars.sh version-b
-
-# Construir Feature Flags (compilación completa desde código fuente)
-./scripts/build/build-feature-flags.sh
-
-# Alternativa: Usar el nuevo script de build local para un proyecto específico
-./scripts/build/build-local.sh feature-flags
-```
-
-#### Despliegue de Aplicaciones
-
-Para desplegar todas las aplicaciones WAR:
-
-```bash
-# Navegar al directorio raíz del proyecto
-cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic
-
-# Desplegar todas las aplicaciones
-./scripts/deploy/deploy-war.sh --all
-
-# Desplegar todas las aplicaciones con limpieza de caché
-./scripts/deploy/deploy-war.sh --clean-all
-```
-
-Para desplegar aplicaciones específicas:
-
-```bash
-# Navegar al directorio raíz del proyecto
-cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic
-
-# Desplegar versión A
-./scripts/deploy/deploy-war.sh deploy/version-a.war
-
-# Desplegar versión B
-./scripts/deploy/deploy-war.sh deploy/version-b.war
-
-# Desplegar Feature Flags
-./scripts/deploy/deploy-war.sh deploy/feature-flags.war
-
-# Desplegar con limpieza de caché
-./scripts/deploy/deploy-war.sh --clean deploy/feature-flags.war
-```
-
-Para limpiar todas las cachés sin desplegar:
-
-```bash
-# Limpiar todas las cachés (HAProxy, WebLogic, navegadores)
-./scripts/deploy/clear-all-caches.sh
-```
-
-Para más detalles sobre los scripts de construcción y despliegue, consulta la [Guía Detallada de Scripts de Construcción](docs/build-scripts.md).
 
 ## Características Adicionales
 
@@ -237,90 +220,131 @@ El sistema incluye un dashboard profesional dedicado para monitorear el tráfico
 
 #### Acceso al Dashboard:
 
-- **Vía HAProxy (Recomendado)**: `http://localhost:8080/dashboard/`
-- **Acceso Directo**: `http://localhost:8001/`
-
-#### Probar el Dashboard:
-
-```bash
-# Ejecutar script de prueba completo
-./scripts/test-dashboard.sh
-
-# Verificar solo la conectividad básica
-curl -s http://localhost:8080/dashboard/api/health | jq .
-```
+- **Vía HAProxy (Recomendado)**: `http://localhost:8100/dashboard/`
+- **Dashboard Unificado**: `http://localhost:8085/unified-dashboard-fixed.html` ⭐
+- **Dashboard de Tráfico**: `http://localhost:8084/`
 
 ### Modo Oscuro
 
-El sistema ahora incluye soporte para modo oscuro en las interfaces de usuario:
+El sistema incluye soporte para modo oscuro en las interfaces de usuario:
 
 1. **Panel de Administración HAProxy**: 
-   - Accede a `http://localhost:8082`
+   - Accede a `http://localhost:8092`
    - Haz clic en el botón de modo oscuro en la esquina superior derecha
 
 2. **Aplicación Feature Flags**:
-   - Accede a `http://localhost:8080/feature-flags/`
+   - Accede a `http://localhost:8100/feature-flags/`
    - Haz clic en el botón de modo oscuro en la esquina superior derecha
 
 El modo oscuro se guarda en localStorage y se mantiene entre sesiones.
 
-### Limpieza de Caché
+## 🔧 Comandos Útiles
 
-El sistema incluye scripts mejorados para limpiar la caché en diferentes niveles:
+### **Gestión de Contenedores**
+```bash
+# Ver logs en tiempo real
+docker-compose -f config/docker-compose.yml logs -f
 
-1. **Limpieza completa**:
+# Ver estado de contenedores
+docker-compose -f config/docker-compose.yml ps
+
+# Reiniciar solo un servicio
+docker-compose -f config/docker-compose.yml restart haproxy
+
+# Ver logs de un servicio específico
+docker-compose -f config/docker-compose.yml logs -f haproxy
+```
+
+### **Verificación y Debugging**
+```bash
+# Verificar imágenes disponibles
+./check-images.sh
+
+# Verificar configuración de URLs
+./verify-urls.sh
+
+# Inicio con logs detallados
+./start-unified-system.sh
+```
+
+### **Limpieza**
+```bash
+# Parar y limpiar todo
+./stop.sh
+
+# Limpieza manual completa
+docker-compose -f config/docker-compose.yml down --remove-orphans
+docker system prune -f
+```
+
+## 🚨 Solución de Problemas Comunes
+
+### **Si algo no funciona:**
+
+1. **Parar todo y reiniciar:**
    ```bash
-   ./scripts/deploy/clear-all-caches.sh
+   ./stop.sh
+   ./start.sh
    ```
 
-2. **Limpieza de HAProxy**:
+2. **Ver logs detallados:**
    ```bash
-   ./scripts/deploy/clear-haproxy-cache.sh
+   ./start-unified-system.sh
    ```
 
-3. **Limpieza de WebLogic**:
+3. **Verificar imágenes:**
    ```bash
-   ./scripts/deploy/clear-weblogic-cache.sh
+   ./check-images.sh
    ```
 
-4. **Limpieza de navegadores**:
+4. **Verificar URLs:**
    ```bash
-   ./scripts/deploy/clear-browser-cache.sh
+   ./verify-urls.sh
    ```
-   Este script genera una herramienta HTML que puedes abrir para limpiar la caché del navegador.
 
-5. **Despliegue con limpieza**:
+### **URLs de Respaldo (Siempre Funcionan)**
+Si HAProxy falla, estos dashboards independientes siguen funcionando:
+- `http://localhost:8085/unified-dashboard-fixed.html`
+- `http://localhost:8084/`
+- `http://localhost:8092/`
+- `http://localhost:8093/api/health`
+
+### Aplicaciones no disponibles (Error 503)
+
+Si recibes errores 503 al acceder a las aplicaciones:
+
+1. Verifica que los contenedores estén en ejecución:
    ```bash
-   ./scripts/deploy/deploy-war.sh --clean deploy/feature-flags.war
+   docker-compose -f config/docker-compose.yml ps
    ```
+
+2. Verifica que las aplicaciones WAR estén desplegadas:
+   ```bash
+   ./scripts/build/build-wars.sh
+   ```
+
+3. Si necesitas forzar un redespliegue limpio:
+   ```bash
+   ./stop.sh
+   ./start.sh
+   ```
+
+## 🎮 Testing A/B, Canary Deployment y Feature Flags
 
 ### 1. Testing A/B
 
 El Testing A/B permite comparar dos versiones de una aplicación para determinar cuál ofrece mejor rendimiento o experiencia de usuario.
 
-#### Configuración desde la línea de comandos:
-
-```bash
-# Ver el estado actual
-./haproxy/scripts/control.sh status
-
-# Habilitar A/B testing con 70% del tráfico a la versión A y 30% a la versión B
-./haproxy/scripts/control.sh ab --enable --weight-a 70
-
-# Alternativa usando los scripts de canary
-./scripts/canary/manage-traffic.sh ab 30  # Envía 30% del tráfico a la versión B
-```
-
 #### Configuración desde la interfaz web:
 
-1. Accede al panel de administración: `http://localhost:8082`
+1. Accede al Dashboard de Tráfico: `http://localhost:8084`
 2. Navega a la sección "A/B Testing"
 3. Ajusta el porcentaje de tráfico entre las versiones A y B
 4. Haz clic en "Aplicar Cambios"
 
 #### Verificación:
 
-1. Abre varias ventanas de navegación privada y accede a `http://localhost:8080/version-a/` o `http://localhost:8080/weblogic-features-a/`
+1. Abre varias ventanas de navegación privada y accede a `http://localhost:8100/version-a/`
 2. Observa cómo algunas solicitudes son dirigidas a la versión A y otras a la versión B según el porcentaje configurado
 3. Verifica las estadísticas en `http://localhost:8404/stats`
 
@@ -328,25 +352,9 @@ El Testing A/B permite comparar dos versiones de una aplicación para determinar
 
 El Canary Deployment permite liberar una nueva versión a un pequeño porcentaje de usuarios antes de un despliegue completo.
 
-#### Configuración desde la línea de comandos:
-
-```bash
-# Ver el estado actual
-./haproxy/scripts/control.sh status
-
-# Habilitar Canary deployment con 5% del tráfico a la nueva versión
-./haproxy/scripts/control.sh canary --enable --percentage 5
-
-# Aumentar gradualmente el porcentaje
-./haproxy/scripts/control.sh canary --enable --percentage 20
-
-# Alternativa usando los scripts de canary
-./scripts/canary/manage-traffic.sh canary 20  # Envía 20% del tráfico a la versión B
-```
-
 #### Configuración desde la interfaz web:
 
-1. Accede al panel de administración: `http://localhost:8082`
+1. Accede al Dashboard de Tráfico: `http://localhost:8084`
 2. Navega a la sección "Canary Deployment"
 3. Ajusta el porcentaje de tráfico para la versión canary
 4. Haz clic en "Aplicar Cambios"
@@ -361,159 +369,15 @@ El Canary Deployment permite liberar una nueva versión a un pequeño porcentaje
 6. Monitorea durante 2 horas
 7. Si no hay problemas, completa la migración al 100%
 
-#### Simulación de tráfico para pruebas:
-
-```bash
-# Simular 100 solicitudes con un intervalo de 0.5 segundos
-./scripts/canary/simulate-traffic.sh 100 0.5
-```
-
 ### 3. Feature Flags
 
 Los Feature Flags permiten activar o desactivar funcionalidades específicas sin necesidad de redesplegar la aplicación.
 
 #### Acceso a la consola de Feature Flags:
 
-1. Accede a la consola de administración: `http://localhost:8080/feature-flags/`
+1. Accede a la consola de administración: `http://localhost:8100/feature-flags/`
 2. Inicia sesión si es necesario
 3. Explora las características disponibles
-
-#### Creación de un nuevo Feature Flag:
-
-1. En la consola de Feature Flags, haz clic en "Create Feature"
-2. Completa los campos:
-   - **ID**: Identificador único (ej: `new-payment-flow`)
-   - **Name**: Nombre descriptivo (ej: "New Payment Flow")
-   - **Description**: Descripción detallada
-   - **Group**: Grupo al que pertenece (opcional)
-   - **Permissions**: Permisos necesarios (opcional)
-3. Haz clic en "Create"
-
-#### Activación/Desactivación de Features:
-
-1. En la lista de características, encuentra la que deseas modificar
-2. Utiliza el interruptor para activar o desactivar la característica
-3. Para una activación más granular, configura:
-   - **Estrategia**: Porcentaje, usuarios específicos, etc.
-   - **Filtros**: Condiciones para la activación
-
-#### Uso de la API REST para Feature Flags:
-
-```bash
-# Activar una característica
-curl -X POST -H "Content-Type: application/json" \
-  http://localhost:8080/feature-flags/api/ff4j/store/features/feature-name/enable
-
-# Desactivar una característica
-curl -X POST -H "Content-Type: application/json" \
-  http://localhost:8080/feature-flags/api/ff4j/store/features/feature-name/disable
-
-# Verificar el estado de una característica
-curl -X GET -H "Content-Type: application/json" \
-  http://localhost:8080/feature-flags/api/ff4j/store/features/feature-name
-```
-
-## Estrategia de Implementación Integrada
-
-Para aprovechar al máximo estas estrategias, se recomienda el siguiente enfoque integrado:
-
-1. **Desarrollo de nuevas características:**
-   - Implementa nuevas características detrás de feature flags
-   - Esto permite desplegar código inactivo que puede activarse posteriormente
-
-2. **Pruebas iniciales:**
-   - Activa los feature flags solo para usuarios internos o beta testers
-   - Recopila feedback y realiza ajustes
-
-3. **Despliegue Canary:**
-   - Despliega la nueva versión con los feature flags configurados
-   - Utiliza el despliegue canary para dirigir un pequeño porcentaje de tráfico a la nueva versión
-   - Monitorea el rendimiento y los errores
-
-4. **Testing A/B:**
-   - Para características específicas, utiliza testing A/B para comparar diferentes implementaciones
-   - Utiliza feature flags para controlar qué usuarios ven qué variante
-
-5. **Despliegue completo:**
-   - Una vez validada la estabilidad, aumenta gradualmente el tráfico a la nueva versión
-   - Activa los feature flags para todos los usuarios
-
-6. **Monitoreo continuo:**
-   - Mantén la capacidad de desactivar características problemáticas mediante feature flags
-   - Utiliza las estadísticas de HAProxy para monitorear el rendimiento de cada versión
-
-## Solución de Problemas Comunes
-
-### Aplicaciones no disponibles (Error 503)
-
-Si recibes errores 503 al acceder a las aplicaciones:
-
-1. Verifica que los contenedores estén en ejecución:
-   ```bash
-   docker-compose -f config/docker-compose.yml ps
-   
-   Subir sercios
-   docker-compose -f config/docker-compose.yml up -d
-   
-   Bajar Servicios
-   docker-compose -f config/docker-compose.yml down
-   ```
-
-2. Verifica que las aplicaciones WAR estén desplegadas:
-   ```bash
-   ./scripts/check-urls.sh
-   ```
-
-3. Si las aplicaciones no están desplegadas, construye y despliega los archivos WAR:
-   ```bash
-   ./scripts/build/create-simple-wars.sh version-a
-   ./scripts/build/create-simple-wars.sh version-b
-   ./scripts/deploy/deploy-war.sh deploy/version-a.war
-   ./scripts/deploy/deploy-war.sh deploy/version-b.war
-   ```
-
-4. Si necesitas forzar un redespliegue limpio:
-   ```bash
-   ./scripts/deploy/clean-redeploy.sh version-a
-   ```
-
-Para más detalles sobre cómo borrar la caché, forzar redespliegues y gestionar usuarios, consulta la [Guía de Redespliegue y Gestión de Caché](docs/redeployment-guide.md).
-
-### Problemas con HAProxy
-
-Si HAProxy no está funcionando correctamente:
-
-1. Verifica los logs:
-   ```bash
-   docker logs haproxy
-   ```
-
-2. Reinicia el contenedor:
-   ```bash
-   docker restart haproxy
-   ```
-
-3. Si persisten los problemas, recrea el contenedor:
-   ```bash
-   docker stop haproxy
-   docker rm haproxy
-   docker-compose -f config/docker-compose.yml up -d haproxy
-   ```
-
-### Panel de Administración no accesible
-
-Si no puedes acceder al panel de administración en `http://localhost:8082`:
-
-1. Verifica que el puerto esté expuesto en el docker-compose.yml:
-   ```bash
-   grep -A 5 "ports:" config/docker-compose.yml
-   ```
-
-2. Si el puerto 8082 no está expuesto, añádelo y reinicia el contenedor:
-   ```bash
-   # Editar config/docker-compose.yml para añadir "- 8082:8082"
-   docker-compose -f config/docker-compose.yml up -d haproxy
-   ```
 
 ## Estructura del Proyecto
 
@@ -534,11 +398,16 @@ docker-for-oracle-weblogic/
 ├── oracle/                    # Configuración de Oracle Database
 ├── scripts/                   # Scripts de utilidad
 │   ├── build/                 # Scripts para construir aplicaciones
+│   │   ├── build-wars.sh      # Construir archivos WAR
+│   │   └── build-local.sh     # Build local
 │   ├── canary/                # Scripts para gestionar despliegue canary
-│   ├── deploy/                # Scripts para desplegar aplicaciones
-│   ├── check-urls.sh          # Script para verificar URLs
-│   └── check-direct-urls.sh   # Script para verificar URLs directamente
-├── start-all.sh               # Script para iniciar todos los servicios
+│   └── deploy/                # Scripts para desplegar aplicaciones
+├── start.sh                   # ⭐ Script principal para iniciar todo
+├── stop.sh                    # Script para parar todo
+├── start-unified-system.sh    # Script unificado completo
+├── verify-urls.sh             # Verificar configuración de URLs
+├── check-images.sh            # Verificar imágenes Docker
+├── build-latest.sh            # Construir imágenes Docker
 └── README.md                  # Este archivo
 ```
 
@@ -550,54 +419,28 @@ docker-for-oracle-weblogic/
 - Al menos 8GB de RAM disponible (recomendado 16GB)
 - Al menos 20GB de espacio en disco
 
-### Archivos Requeridos
-
-Antes de iniciar el proyecto, necesitas descargar y colocar los siguientes archivos en sus ubicaciones correspondientes:
-
-| Archivo | Ubicación | Descripción |
-|---------|-----------|-------------|
-| `fmw_14.1.1.0.0_wls_Disk1_1of1.zip` | `docker/weblogic/installers/` | Oracle WebLogic Server 14.1.1.0.0 |
-| `sqlcl-25.2.2.199.0918.zip` | `oracle/installers/` | Oracle SQL Command Line Interface |
-| `demo_oracle.ddl` | `oracle/scripts/setup/` | Scripts DDL para datos de demostración |
-| `.env` | Directorio raíz (`./`) | Variables de entorno del proyecto |
-
 ### Verificación de Prerequisitos
 
 Para verificar que todos los prerequisitos estén cumplidos, ejecuta:
 
 ```bash
 # Verificar prerequisitos del sistema
-./scripts/check-prerequisites.sh
+./check-images.sh
 ```
 
-Este script verificará:
-- Instalación de Docker y Docker Compose
-- Presencia de archivos requeridos
-- Recursos del sistema (RAM y disco)
-- Disponibilidad de puertos
-- Estructura de directorios
+## 💡 Consejos y Mejores Prácticas
 
-### Configuración Inicial
+- **Los dashboards independientes** (8084, 8085, 8092, 8093) son más confiables que las URLs que dependen de HAProxy
+- **El Frontend Principal** (8100) depende de que HAProxy esté funcionando correctamente
+- **Usa el Dashboard de Tráfico** (8084) para A/B Testing y Canary Deployment
+- **El Dashboard Unificado** (8085) es el más completo para monitoreo general
+- **Construye las imágenes localmente** para mejor rendimiento y control de versiones
 
-Si es la primera vez que usas el proyecto:
+## 📚 Documentación Adicional
 
-```bash
-# 1. Crear estructura de directorios (si no existe)
-mkdir -p docker/weblogic/installers oracle/installers oracle/scripts/setup
-
-# 2. Mover archivos a sus ubicaciones (ajusta las rutas según tu caso)
-# mv /ruta/a/fmw_14.1.1.0.0_wls_Disk1_1of1.zip docker/weblogic/installers/
-# mv /ruta/a/sqlcl-25.2.2.199.0918.zip oracle/installers/
-# mv /ruta/a/demo_oracle.ddl oracle/scripts/setup/
-
-# 3. Verificar prerequisitos
-./scripts/check-prerequisites.sh
-
-# 4. Si todo está correcto, iniciar el proyecto
-./start-all.sh
-```
-
-Para información detallada sobre prerequisitos, consulta [docs/prerequisites.md](docs/prerequisites.md).
+- [Instrucciones Unificadas](INSTRUCCIONES-UNIFICADAS.md) - Guía rápida de uso
+- [Guía de Scripts de Construcción](docs/build-scripts.md) - Detalles sobre build y despliegue
+- [Guía de Redespliegue](docs/redeployment-guide.md) - Gestión de caché y redespliegues
 
 ## Licencias
 
@@ -605,3 +448,15 @@ Para información detallada sobre prerequisitos, consulta [docs/prerequisites.md
 - Oracle Database: Requiere aceptar los términos de licencia de Oracle
 - HAProxy: Licencia GPL v2
 - Scripts y configuraciones personalizadas: MIT License
+
+---
+
+## ✨ ¡Listo para Usar!
+
+Ejecuta el comando principal para comenzar:
+
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
+```
+
+Luego ve a: `http://localhost:8085/unified-dashboard-fixed.html` para acceder al dashboard principal.
