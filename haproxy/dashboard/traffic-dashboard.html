@@ -3,601 +3,501 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Tráfico WebLogic A/B y Canary</title>
+    <title>🚀 Dashboard Real - HAProxy A/B Testing & Canary</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             padding: 20px;
         }
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
         .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            margin-bottom: 25px;
             border: none;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.95);
         }
         .card-header {
-            background-color: #343a40;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: 10px 10px 0 0;
-            padding: 15px 20px;
+            border-radius: 15px 15px 0 0;
+            padding: 20px;
             font-weight: 600;
+            font-size: 1.1rem;
         }
-        .status-badge {
-            float: right;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .status-online {
+            color: #28a745;
+            font-weight: bold;
         }
-        .active {
-            background-color: #28a745;
+        .status-offline {
+            color: #dc3545;
+            font-weight: bold;
         }
-        .inactive {
-            background-color: #dc3545;
+        .status-unknown {
+            color: #ffc107;
+            font-weight: bold;
         }
-        .chart-container {
-            position: relative;
-            height: 200px;
-            width: 100%;
+        .metric-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
         }
-        .traffic-control {
-            margin-top: 15px;
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .control-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
         .slider-container {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
+            margin: 20px 0;
         }
         .slider {
-            flex-grow: 1;
-            margin: 0 15px;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
         }
-        .percentage-display {
-            width: 60px;
-            text-align: center;
-            font-weight: bold;
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+        .alert {
+            border-radius: 15px;
+            border: none;
+            padding: 15px 20px;
+            margin-bottom: 20px;
         }
         .server-status {
             display: flex;
             justify-content: space-between;
-            margin-top: 15px;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin-bottom: 10px;
         }
-        .server-indicator {
-            width: 48%;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
+        .weight-display {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
         }
-        .server-active {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+        .refresh-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            border-radius: 50px;
+            padding: 15px 20px;
         }
-        .server-inactive {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .requests-counter {
+        .percentage-display {
             font-size: 1.5rem;
             font-weight: bold;
-            text-align: center;
-            margin-top: 10px;
-        }
-        .refresh-control {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-        .last-updated {
-            font-size: 0.8rem;
-            color: #6c757d;
+            color: #667eea;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="mb-4">Dashboard de Tráfico WebLogic</h1>
-        
-        <div class="refresh-control">
-            <div>
-                <label for="refresh-interval">Intervalo de actualización:</label>
-                <select id="refresh-interval" class="form-select form-select-sm d-inline-block w-auto">
-                    <option value="2000">2 segundos</option>
-                    <option value="5000" selected>5 segundos</option>
-                    <option value="10000">10 segundos</option>
-                    <option value="30000">30 segundos</option>
-                </select>
-                <button id="refresh-now" class="btn btn-sm btn-primary ms-2">Actualizar ahora</button>
-            </div>
-            <div class="last-updated">
-                Última actualización: <span id="last-updated-time">-</span>
-            </div>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h1 class="text-white mb-2">🚀 Dashboard Real - HAProxy Control</h1>
+            <p class="text-white-50">Control real de A/B Testing y Canary Deployment</p>
+            <button class="btn btn-light refresh-btn" onclick="refreshAll()">🔄 Actualizar</button>
         </div>
-        
-        <div class="row">
-            <!-- A/B Testing Card -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        Testing A/B
-                        <span id="ab-status" class="status-badge inactive">Inactivo</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="abChart"></canvas>
-                        </div>
-                        <div class="traffic-control">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="ab-toggle">
-                                <label class="form-check-label" for="ab-toggle">Activar Testing A/B</label>
-                            </div>
-                            <div class="slider-container">
-                                <span>Version A</span>
-                                <input type="range" class="form-range slider" id="ab-slider" min="0" max="100" value="50" disabled>
-                                <span>Version B</span>
-                                <div class="percentage-display" id="ab-percentage">50%</div>
-                            </div>
-                        </div>
-                        <div class="server-status">
-                            <div id="version-a-status" class="server-indicator server-active">
-                                <div>Version A</div>
-                                <div class="requests-counter" id="version-a-requests">0</div>
-                                <div>peticiones</div>
-                            </div>
-                            <div id="version-b-status" class="server-indicator server-inactive">
-                                <div>Version B</div>
-                                <div class="requests-counter" id="version-b-requests">0</div>
-                                <div>peticiones</div>
-                            </div>
-                        </div>
-                    </div>
+
+        <!-- Status Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="haproxy-status">⏳</div>
+                    <div class="metric-label">HAProxy Status</div>
                 </div>
             </div>
-            
-            <!-- Canary Deployment Card -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        Despliegue Canary
-                        <span id="canary-status" class="status-badge inactive">Inactivo</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="chart-container">
-                            <canvas id="canaryChart"></canvas>
-                        </div>
-                        <div class="traffic-control">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="canary-toggle">
-                                <label class="form-check-label" for="canary-toggle">Activar Despliegue Canary</label>
-                            </div>
-                            <div class="slider-container">
-                                <span>WebLogic A</span>
-                                <input type="range" class="form-range slider" id="canary-slider" min="0" max="100" value="10" disabled>
-                                <span>WebLogic B</span>
-                                <div class="percentage-display" id="canary-percentage">10%</div>
-                            </div>
-                        </div>
-                        <div class="server-status">
-                            <div id="weblogic-a-status" class="server-indicator server-active">
-                                <div>WebLogic A</div>
-                                <div class="requests-counter" id="weblogic-a-requests">0</div>
-                                <div>peticiones</div>
-                            </div>
-                            <div id="weblogic-b-status" class="server-indicator server-inactive">
-                                <div>WebLogic B</div>
-                                <div class="requests-counter" id="weblogic-b-requests">0</div>
-                                <div>peticiones</div>
-                            </div>
-                        </div>
-                    </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="weblogic-a-status">⏳</div>
+                    <div class="metric-label">WebLogic A</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="weblogic-b-status">⏳</div>
+                    <div class="metric-label">WebLogic B</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <div class="metric-value" id="total-requests">0</div>
+                    <div class="metric-label">Total Requests</div>
                 </div>
             </div>
         </div>
-        
-        <!-- Traffic History Card -->
+
+        <!-- Server Weights Display -->
         <div class="card">
             <div class="card-header">
-                Historial de Tráfico
+                📊 Estado Actual de Servidores
             </div>
             <div class="card-body">
-                <div style="height: 300px;">
-                    <canvas id="trafficHistoryChart"></canvas>
+                <div id="servers-status">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Obteniendo estado de servidores...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Control Panels -->
+        <div class="row">
+            <!-- A/B Testing Control -->
+            <div class="col-md-6">
+                <div class="control-panel">
+                    <h3 class="mb-3">🔄 A/B Testing Control</h3>
+                    <div class="slider-container">
+                        <label class="form-label">Porcentaje Versión A: <span id="ab-percentage" class="percentage-display">50%</span></label>
+                        <input type="range" class="slider" id="ab-slider" min="0" max="100" value="50" oninput="updateABPercentage()">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>0% A</span>
+                            <span>50% A / 50% B</span>
+                            <span>100% A</span>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button class="btn btn-primary" onclick="applyABTesting()">✅ Aplicar A/B Testing</button>
+                        <button class="btn btn-danger" onclick="resetWeights()">🔄 Reset 50/50</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canary Deployment Control -->
+            <div class="col-md-6">
+                <div class="control-panel">
+                    <h3 class="mb-3">🚀 Canary Deployment Control</h3>
+                    <div class="slider-container">
+                        <label class="form-label">Porcentaje Canary: <span id="canary-percentage" class="percentage-display">10%</span></label>
+                        <input type="range" class="slider" id="canary-slider" min="0" max="100" value="10" oninput="updateCanaryPercentage()">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>0% Canary</span>
+                            <span>10% Canary / 90% Stable</span>
+                            <span>100% Canary</span>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button class="btn btn-primary" onclick="applyCanaryDeployment()">🚀 Aplicar Canary</button>
+                        <button class="btn btn-danger" onclick="resetWeights()">🔄 Reset 50/50</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="messages-container"></div>
+
+        <!-- API Test Panel -->
+        <div class="card">
+            <div class="card-header">
+                🔧 Panel de Pruebas API
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-primary w-100 mb-2" onclick="testAPI()">🧪 Test API Health</button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-info w-100 mb-2" onclick="getStats()">📊 Get Stats</button>
+                    </div>
+                    <div class="col-md-4">
+                        <button class="btn btn-outline-warning w-100 mb-2" onclick="resetWeights()">🔄 Reset All</button>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <pre id="api-response" class="bg-light p-3 rounded" style="max-height: 200px; overflow-y: auto; font-size: 0.8rem;"></pre>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuración de gráficos
-        const abChartCtx = document.getElementById('abChart').getContext('2d');
-        const canaryChartCtx = document.getElementById('canaryChart').getContext('2d');
-        const historyChartCtx = document.getElementById('trafficHistoryChart').getContext('2d');
-        
-        // Colores
-        const colors = {
-            versionA: 'rgba(54, 162, 235, 0.8)',
-            versionB: 'rgba(255, 99, 132, 0.8)',
-            weblogicA: 'rgba(75, 192, 192, 0.8)',
-            weblogicB: 'rgba(255, 159, 64, 0.8)'
-        };
-        
-        // Crear gráficos
-        const abChart = new Chart(abChartCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Version A', 'Version B'],
-                datasets: [{
-                    data: [100, 0],
-                    backgroundColor: [colors.versionA, colors.versionB],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-        
-        const canaryChart = new Chart(canaryChartCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['WebLogic A', 'WebLogic B'],
-                datasets: [{
-                    data: [100, 0],
-                    backgroundColor: [colors.weblogicA, colors.weblogicB],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-        
-        // Historial de tráfico (últimas 10 muestras)
-        const timeLabels = Array(10).fill('').map((_, i) => `${i}`);
-        const trafficHistoryChart = new Chart(historyChartCtx, {
-            type: 'line',
-            data: {
-                labels: timeLabels,
-                datasets: [
-                    {
-                        label: 'Version A',
-                        data: Array(10).fill(0),
-                        borderColor: colors.versionA,
-                        backgroundColor: 'transparent',
-                        tension: 0.4
-                    },
-                    {
-                        label: 'Version B',
-                        data: Array(10).fill(0),
-                        borderColor: colors.versionB,
-                        backgroundColor: 'transparent',
-                        tension: 0.4
-                    },
-                    {
-                        label: 'WebLogic A',
-                        data: Array(10).fill(0),
-                        borderColor: colors.weblogicA,
-                        backgroundColor: 'transparent',
-                        tension: 0.4
-                    },
-                    {
-                        label: 'WebLogic B',
-                        data: Array(10).fill(0),
-                        borderColor: colors.weblogicB,
-                        backgroundColor: 'transparent',
-                        tension: 0.4
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Peticiones'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Tiempo'
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-        
-        // Variables para almacenar contadores históricos
-        let versionAHistory = Array(10).fill(0);
-        let versionBHistory = Array(10).fill(0);
-        let weblogicAHistory = Array(10).fill(0);
-        let weblogicBHistory = Array(10).fill(0);
-        
-        // Elementos DOM
-        const abToggle = document.getElementById('ab-toggle');
-        const canaryToggle = document.getElementById('canary-toggle');
-        const abSlider = document.getElementById('ab-slider');
-        const canarySlider = document.getElementById('canary-slider');
-        const abPercentage = document.getElementById('ab-percentage');
-        const canaryPercentage = document.getElementById('canary-percentage');
-        const refreshInterval = document.getElementById('refresh-interval');
-        const refreshNow = document.getElementById('refresh-now');
-        const lastUpdatedTime = document.getElementById('last-updated-time');
-        
-        // Event listeners
-        abToggle.addEventListener('change', function() {
-            abSlider.disabled = !this.checked;
-            updateABStatus(this.checked, parseInt(abSlider.value));
-        });
-        
-        canaryToggle.addEventListener('change', function() {
-            canarySlider.disabled = !this.checked;
-            updateCanaryStatus(this.checked, parseInt(canarySlider.value));
-        });
-        
-        abSlider.addEventListener('input', function() {
-            abPercentage.textContent = `${this.value}%`;
-            updateABChart(parseInt(this.value));
-        });
-        
-        abSlider.addEventListener('change', function() {
-            if (abToggle.checked) {
-                updateABStatus(true, parseInt(this.value));
-            }
-        });
-        
-        canarySlider.addEventListener('input', function() {
-            canaryPercentage.textContent = `${this.value}%`;
-            updateCanaryChart(parseInt(this.value));
-        });
-        
-        canarySlider.addEventListener('change', function() {
-            if (canaryToggle.checked) {
-                updateCanaryStatus(true, parseInt(this.value));
-            }
-        });
-        
-        refreshNow.addEventListener('click', fetchData);
-        
-        refreshInterval.addEventListener('change', function() {
-            clearInterval(dataInterval);
-            dataInterval = setInterval(fetchData, parseInt(this.value));
-        });
-        
-        // Funciones para actualizar gráficos
-        function updateABChart(percentage) {
-            abChart.data.datasets[0].data = [100 - percentage, percentage];
-            abChart.update();
+        // Variables globales
+        let currentStats = {};
+
+        // Funciones de actualización de UI
+        function updateABPercentage() {
+            const slider = document.getElementById('ab-slider');
+            const display = document.getElementById('ab-percentage');
+            display.textContent = slider.value + '%';
         }
-        
-        function updateCanaryChart(percentage) {
-            canaryChart.data.datasets[0].data = [100 - percentage, percentage];
-            canaryChart.update();
+
+        function updateCanaryPercentage() {
+            const slider = document.getElementById('canary-slider');
+            const display = document.getElementById('canary-percentage');
+            display.textContent = slider.value + '%';
         }
-        
-        // Funciones para actualizar estado
-        function updateABStatus(enabled, percentage) {
-            const status = document.getElementById('ab-status');
-            const versionAStatus = document.getElementById('version-a-status');
-            const versionBStatus = document.getElementById('version-b-status');
+
+        // Función para mostrar mensajes
+        function showMessage(message, type = 'info') {
+            const container = document.getElementById('messages-container');
+            const alertClass = type === 'success' ? 'alert-success' : 
+                              type === 'error' ? 'alert-danger' : 
+                              type === 'warning' ? 'alert-warning' : 'alert-info';
             
-            if (enabled) {
-                status.textContent = 'Activo';
-                status.classList.remove('inactive');
-                status.classList.add('active');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert ${alertClass} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            container.appendChild(alertDiv);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+
+        // Funciones de API
+        async function applyABTesting() {
+            const percentage = parseInt(document.getElementById('ab-slider').value);
+            
+            try {
+                showMessage(`🔄 Aplicando A/B Testing: ${percentage}% A, ${100-percentage}% B...`, 'info');
                 
-                versionAStatus.classList.add('server-active');
-                versionBStatus.classList.add('server-active');
-                versionBStatus.classList.remove('server-inactive');
-                
-                // Enviar solicitud para activar A/B testing
-                fetch('/api/ab/enable', {
+                const response = await fetch('/api/ab/apply', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ percentage: percentage })
-                }).catch(error => console.error('Error:', error));
-            } else {
-                status.textContent = 'Inactivo';
-                status.classList.remove('active');
-                status.classList.add('inactive');
+                });
                 
-                versionBStatus.classList.remove('server-active');
-                versionBStatus.classList.add('server-inactive');
+                const result = await response.json();
                 
-                // Enviar solicitud para desactivar A/B testing
-                fetch('/api/ab/disable', {
-                    method: 'POST'
-                }).catch(error => console.error('Error:', error));
+                if (result.success) {
+                    showMessage(`✅ ${result.message}`, 'success');
+                    refreshStats();
+                } else {
+                    showMessage(`❌ Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error aplicando A/B Testing: ${error.message}`, 'error');
             }
         }
-        
-        function updateCanaryStatus(enabled, percentage) {
-            const status = document.getElementById('canary-status');
+
+        async function applyCanaryDeployment() {
+            const percentage = parseInt(document.getElementById('canary-slider').value);
+            
+            try {
+                showMessage(`🚀 Aplicando Canary Deployment: ${percentage}% canary...`, 'info');
+                
+                const response = await fetch('/api/canary/apply', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ percentage: percentage })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`✅ ${result.message}`, 'success');
+                    refreshStats();
+                } else {
+                    showMessage(`❌ Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error aplicando Canary: ${error.message}`, 'error');
+            }
+        }
+
+        async function resetWeights() {
+            try {
+                showMessage('🔄 Reseteando pesos a 50/50...', 'info');
+                
+                const response = await fetch('/api/reset', {
+                    method: 'POST'
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(`✅ ${result.message}`, 'success');
+                    // Reset sliders
+                    document.getElementById('ab-slider').value = 50;
+                    document.getElementById('canary-slider').value = 50;
+                    updateABPercentage();
+                    updateCanaryPercentage();
+                    refreshStats();
+                } else {
+                    showMessage(`❌ Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error reseteando: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                currentStats = stats;
+                updateStatsDisplay(stats);
+            } catch (error) {
+                showMessage(`❌ Error obteniendo estadísticas: ${error.message}`, 'error');
+            }
+        }
+
+        function updateStatsDisplay(stats) {
+            // Update service status
+            const haproxyStatus = document.getElementById('haproxy-status');
             const weblogicAStatus = document.getElementById('weblogic-a-status');
             const weblogicBStatus = document.getElementById('weblogic-b-status');
             
-            if (enabled) {
-                status.textContent = 'Activo';
-                status.classList.remove('inactive');
-                status.classList.add('active');
+            if (stats.services) {
+                haproxyStatus.textContent = stats.services.haproxy === 'online' ? '🟢 Online' : '🔴 Offline';
+                weblogicAStatus.textContent = stats.services.weblogic_a === 'online' ? '🟢 Online' : '🔴 Offline';
+                weblogicBStatus.textContent = stats.services.weblogic_b === 'online' ? '🟢 Online' : '🔴 Offline';
+            }
+
+            // Update servers status
+            const serversContainer = document.getElementById('servers-status');
+            serversContainer.innerHTML = '';
+
+            if (stats.backends && stats.backends.weblogic_main_backend) {
+                const backend = stats.backends.weblogic_main_backend;
                 
-                weblogicAStatus.classList.add('server-active');
-                weblogicBStatus.classList.add('server-active');
-                weblogicBStatus.classList.remove('server-inactive');
-                
-                // Enviar solicitud para activar Canary
-                fetch('/api/canary/enable', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ percentage: percentage })
-                }).catch(error => console.error('Error:', error));
+                Object.keys(backend).forEach(serverName => {
+                    const server = backend[serverName];
+                    const serverDiv = document.createElement('div');
+                    serverDiv.className = 'server-status';
+                    
+                    const statusClass = server.status === 'UP' ? 'status-online' : 
+                                       server.status === 'DOWN' ? 'status-offline' : 'status-unknown';
+                    
+                    serverDiv.innerHTML = `
+                        <div>
+                            <strong>${serverName}</strong>
+                            <span class="${statusClass}">(${server.status})</span>
+                        </div>
+                        <div class="weight-display">Peso: ${server.weight}</div>
+                        <div>
+                            <small>Requests: ${server.requests} | Sessions: ${server.current_sessions}</small>
+                        </div>
+                    `;
+                    
+                    serversContainer.appendChild(serverDiv);
+                });
             } else {
-                status.textContent = 'Inactivo';
-                status.classList.remove('active');
-                status.classList.add('inactive');
-                
-                weblogicBStatus.classList.remove('server-active');
-                weblogicBStatus.classList.add('server-inactive');
-                
-                // Enviar solicitud para desactivar Canary
-                fetch('/api/canary/disable', {
-                    method: 'POST'
-                }).catch(error => console.error('Error:', error));
+                serversContainer.innerHTML = '<div class="text-center text-muted">No hay datos de servidores disponibles</div>';
+            }
+
+            // Update total requests
+            let totalRequests = 0;
+            if (stats.backends && stats.backends.weblogic_main_backend) {
+                Object.values(stats.backends.weblogic_main_backend).forEach(server => {
+                    totalRequests += server.requests || 0;
+                });
+            }
+            document.getElementById('total-requests').textContent = totalRequests.toLocaleString();
+        }
+
+        // Test functions
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/health');
+                const result = await response.json();
+                document.getElementById('api-response').textContent = JSON.stringify(result, null, 2);
+                showMessage('✅ API Health Check exitoso', 'success');
+            } catch (error) {
+                document.getElementById('api-response').textContent = `Error: ${error.message}`;
+                showMessage('❌ Error en API Health Check', 'error');
             }
         }
-        
-        // Función para obtener datos
-        function fetchData() {
-            // En un entorno real, esto obtendría datos de la API
-            // Aquí simulamos datos para la demostración
-            fetch('/api/stats')
-                .then(response => response.json())
-                .then(data => {
-                    // Actualizar estado de A/B testing
-                    abToggle.checked = data.ab.enabled;
-                    abSlider.disabled = !data.ab.enabled;
-                    abSlider.value = data.ab.percentage;
-                    abPercentage.textContent = `${data.ab.percentage}%`;
-                    updateABChart(data.ab.percentage);
-                    updateABStatus(data.ab.enabled, data.ab.percentage);
-                    
-                    // Actualizar estado de Canary
-                    canaryToggle.checked = data.canary.enabled;
-                    canarySlider.disabled = !data.canary.enabled;
-                    canarySlider.value = data.canary.percentage;
-                    canaryPercentage.textContent = `${data.canary.percentage}%`;
-                    updateCanaryChart(data.canary.percentage);
-                    updateCanaryStatus(data.canary.enabled, data.canary.percentage);
-                    
-                    // Actualizar contadores de peticiones
-                    document.getElementById('version-a-requests').textContent = data.requests.versionA;
-                    document.getElementById('version-b-requests').textContent = data.requests.versionB;
-                    document.getElementById('weblogic-a-requests').textContent = data.requests.weblogicA;
-                    document.getElementById('weblogic-b-requests').textContent = data.requests.weblogicB;
-                    
-                    // Actualizar historial
-                    versionAHistory.shift();
-                    versionAHistory.push(data.requests.versionA);
-                    
-                    versionBHistory.shift();
-                    versionBHistory.push(data.requests.versionB);
-                    
-                    weblogicAHistory.shift();
-                    weblogicAHistory.push(data.requests.weblogicA);
-                    
-                    weblogicBHistory.shift();
-                    weblogicBHistory.push(data.requests.weblogicB);
-                    
-                    // Actualizar gráfico de historial
-                    trafficHistoryChart.data.datasets[0].data = versionAHistory;
-                    trafficHistoryChart.data.datasets[1].data = versionBHistory;
-                    trafficHistoryChart.data.datasets[2].data = weblogicAHistory;
-                    trafficHistoryChart.data.datasets[3].data = weblogicBHistory;
-                    trafficHistoryChart.update();
-                    
-                    // Actualizar hora de última actualización
-                    const now = new Date();
-                    lastUpdatedTime.textContent = now.toLocaleTimeString();
-                })
-                .catch(error => {
-                    console.error('Error al obtener datos:', error);
-                    // Simular datos para demostración
-                    simulateData();
-                });
+
+        async function getStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const result = await response.json();
+                document.getElementById('api-response').textContent = JSON.stringify(result, null, 2);
+                showMessage('✅ Estadísticas obtenidas', 'success');
+            } catch (error) {
+                document.getElementById('api-response').textContent = `Error: ${error.message}`;
+                showMessage('❌ Error obteniendo estadísticas', 'error');
+            }
         }
-        
-        // Función para simular datos (para demostración)
-        function simulateData() {
-            const abEnabled = Math.random() > 0.5;
-            const canaryEnabled = Math.random() > 0.5;
-            const abPercentage = Math.floor(Math.random() * 100);
-            const canaryPercentage = Math.floor(Math.random() * 100);
-            
-            const versionA = Math.floor(Math.random() * 1000);
-            const versionB = abEnabled ? Math.floor(Math.random() * 1000) : 0;
-            const weblogicA = Math.floor(Math.random() * 1000);
-            const weblogicB = canaryEnabled ? Math.floor(Math.random() * 1000) : 0;
-            
-            // Actualizar estado de A/B testing
-            abToggle.checked = abEnabled;
-            abSlider.disabled = !abEnabled;
-            abSlider.value = abPercentage;
-            abPercentage.textContent = `${abPercentage}%`;
-            updateABChart(abPercentage);
-            updateABStatus(abEnabled, abPercentage);
-            
-            // Actualizar estado de Canary
-            canaryToggle.checked = canaryEnabled;
-            canarySlider.disabled = !canaryEnabled;
-            canarySlider.value = canaryPercentage;
-            canaryPercentage.textContent = `${canaryPercentage}%`;
-            updateCanaryChart(canaryPercentage);
-            updateCanaryStatus(canaryEnabled, canaryPercentage);
-            
-            // Actualizar contadores de peticiones
-            document.getElementById('version-a-requests').textContent = versionA;
-            document.getElementById('version-b-requests').textContent = versionB;
-            document.getElementById('weblogic-a-requests').textContent = weblogicA;
-            document.getElementById('weblogic-b-requests').textContent = weblogicB;
-            
-            // Actualizar historial
-            versionAHistory.shift();
-            versionAHistory.push(versionA);
-            
-            versionBHistory.shift();
-            versionBHistory.push(versionB);
-            
-            weblogicAHistory.shift();
-            weblogicAHistory.push(weblogicA);
-            
-            weblogicBHistory.shift();
-            weblogicBHistory.push(weblogicB);
-            
-            // Actualizar gráfico de historial
-            trafficHistoryChart.data.datasets[0].data = versionAHistory;
-            trafficHistoryChart.data.datasets[1].data = versionBHistory;
-            trafficHistoryChart.data.datasets[2].data = weblogicAHistory;
-            trafficHistoryChart.data.datasets[3].data = weblogicBHistory;
-            trafficHistoryChart.update();
-            
-            // Actualizar hora de última actualización
-            const now = new Date();
-            lastUpdatedTime.textContent = now.toLocaleTimeString();
+
+        function refreshAll() {
+            refreshStats();
+            showMessage('🔄 Dashboard actualizado', 'info');
         }
-        
-        // Iniciar intervalo de actualización
-        let dataInterval = setInterval(fetchData, 5000);
-        
-        // Cargar datos iniciales
-        fetchData();
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            showMessage('🚀 Dashboard Real iniciado - Conectado con HAProxy', 'success');
+            refreshStats();
+            
+            // Auto-refresh every 10 seconds
+            setInterval(refreshStats, 10000);
+        });
+
+        // Bootstrap JS for alerts
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js';
+        document.head.appendChild(script);
     </script>
 </body>
 </html>

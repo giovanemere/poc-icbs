@@ -21,8 +21,8 @@ if [ -f "$TRAFFIC_PID_FILE" ]; then
     TRAFFIC_PID=$(cat "$TRAFFIC_PID_FILE")
     if ps -p $TRAFFIC_PID > /dev/null 2>&1; then
         echo -e "${YELLOW}⚠️  Dashboard de Tráfico ya está corriendo (PID: $TRAFFIC_PID)${NC}"
-        echo -e "${GREEN}📊 Dashboard disponible en: http://localhost:8082${NC}"
-        echo -e "${GREEN}📡 API disponible en: http://localhost:8082/api/stats${NC}"
+        echo -e "${GREEN}📊 Dashboard disponible en: http://localhost:8084${NC}"
+        echo -e "${GREEN}📡 API disponible en: http://localhost:8084/api/stats${NC}"
         exit 0
     else
         rm -f "$TRAFFIC_PID_FILE"
@@ -71,10 +71,10 @@ echo
 echo -e "${GREEN}🎉 Dashboard de Tráfico WebLogic iniciado correctamente${NC}"
 echo
 echo -e "${BLUE}📋 URLs disponibles:${NC}"
-echo -e "${GREEN}📊 Dashboard de Tráfico:     http://localhost:8082${NC}"
-echo -e "${GREEN}📡 API de Estadísticas:     http://localhost:8082/api/stats${NC}"
-echo -e "${GREEN}🔧 API A/B Testing:         http://localhost:8082/api/ab/enable${NC}"
-echo -e "${GREEN}🚀 API Canary Deployment:   http://localhost:8082/api/canary/enable${NC}"
+echo -e "${GREEN}📊 Dashboard de Tráfico:     http://localhost:8084${NC}"
+echo -e "${GREEN}📡 API de Estadísticas:     http://localhost:8084/api/stats${NC}"
+echo -e "${GREEN}🔧 API A/B Testing:         http://localhost:8084/api/ab/enable${NC}"
+echo -e "${GREEN}🚀 API Canary Deployment:   http://localhost:8084/api/canary/enable${NC}"
 echo
 echo -e "${YELLOW}📝 Log disponible en: traffic-dashboard.log${NC}"
 
@@ -83,12 +83,12 @@ echo
 echo -e "${BLUE}🧪 Probando conectividad...${NC}"
 sleep 2
 
-if curl -s http://localhost:8082/api/health > /dev/null; then
+if curl -s http://localhost:8084/api/health > /dev/null; then
     echo -e "${GREEN}✅ Dashboard respondiendo correctamente${NC}"
     
     # Mostrar estadísticas iniciales
     echo -e "${BLUE}📈 Estadísticas iniciales:${NC}"
-    curl -s http://localhost:8082/api/stats | jq -r '
+    curl -s http://localhost:8084/api/stats | jq -r '
         "   🔄 RPS Actual: " + (.metrics.current_rps | tostring) +
         "\n   📊 Total Requests: " + (.metrics.total_requests | tostring) +
         "\n   ⏱️  Tiempo Respuesta: " + (.metrics.avg_response_time | tostring) + "ms" +

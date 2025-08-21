@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Prueba Simple - URLs y Gráfico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a2e; color: white; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 20px; background: #16213e; border-radius: 10px; }
+        .url-card { 
+            display: inline-block; 
+            margin: 10px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            min-width: 200px;
+            transition: all 0.3s ease;
+        }
+        .url-card.active { background: #2ed573; color: white; }
+        .url-card.inactive { background: #ff4757; color: white; }
+        .url-card.partial { background: #ffa502; color: white; }
+        .controls { margin: 20px 0; }
+        .slider { width: 300px; margin: 10px; }
+        .chart-container { width: 400px; height: 400px; margin: 20px auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Prueba Simple - URLs y Gráfico</h1>
+        
+        <div class="section">
+            <h2>🎛️ Controles</h2>
+            <div class="controls">
+                <label>
+                    <input type="checkbox" id="ab-toggle"> A/B Testing
+                </label>
+                <br>
+                <label>
+                    A/B Slider: <input type="range" id="ab-slider" class="slider" min="0" max="100" value="50">
+                    <span id="ab-value">50%</span>
+                </label>
+                <br><br>
+                <label>
+                    <input type="checkbox" id="canary-toggle"> Canary Deployment
+                </label>
+                <br>
+                <label>
+                    Canary Slider: <input type="range" id="canary-slider" class="slider" min="0" max="100" value="20">
+                    <span id="canary-value">20%</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🔗 URLs Activas del Sistema</h2>
+            <div id="url-version-a" class="url-card active">
+                <strong>Version A</strong><br>
+                Tráfico: <span id="traffic-version-a">100%</span>
+            </div>
+            <div id="url-version-b" class="url-card inactive">
+                <strong>Version B</strong><br>
+                Tráfico: <span id="traffic-version-b">0%</span>
+            </div>
+            <div id="url-weblogic-a" class="url-card active">
+                <strong>WebLogic A</strong><br>
+                Tráfico: <span id="traffic-weblogic-a">100%</span>
+            </div>
+            <div id="url-weblogic-b" class="url-card inactive">
+                <strong>WebLogic B</strong><br>
+                Tráfico: <span id="traffic-weblogic-b">0%</span>
+            </div>
+            <div id="url-feature-flags" class="url-card active">
+                <strong>Feature Flags</strong><br>
+                Tráfico: <span id="traffic-feature-flags">100%</span>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📊 Distribución de Tráfico en Tiempo Real</h2>
+            <div class="chart-container">
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🧪 Pruebas</h2>
+            <button onclick="testAll()">🧪 Probar Todo</button>
+            <button onclick="updateURLs()">🔗 Actualizar URLs</button>
+            <button onclick="updateChart()">📊 Actualizar Gráfico</button>
+            <div id="log" style="background: #000; padding: 10px; margin: 10px 0; font-family: monospace; height: 200px; overflow-y: scroll;"></div>
+        </div>
+    </div>
+
+    <script>
+        let trafficChart;
+        let isABEnabled = false;
+        let isCanaryEnabled = false;
+        
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+        
+        function initChart() {
+            const ctx = document.getElementById('trafficChart').getContext('2d');
+            trafficChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Version A', 'Version B', 'WebLogic A', 'WebLogic B'],
+                    datasets: [{
+                        data: [100, 0, 100, 0],
+                        backgroundColor: ['#2ed573', '#ff4757', '#4834d4', '#ff4757'],
+                        borderWidth: 2,
+                        borderColor: 'rgba(255, 255, 255, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: 'white', font: { size: 14 } }
+                        }
+                    }
+                }
+            });
+            log('✅ Gráfico inicializado');
+        }
+        
+        function updateURLs() {
+            log('🔗 Actualizando URLs...');
+            
+            // Obtener estados
+            const abToggle = document.getElementById('ab-toggle');
+            const abSlider = document.getElementById('ab-slider');
+            const canaryToggle = document.getElementById('canary-toggle');
+            const canarySlider = document.getElementById('canary-slider');
+            
+            const isABActive = abToggle.checked;
+            const isCanaryActive = canaryToggle.checked;
+            const abValue = parseInt(abSlider.value);
+            const canaryValue = parseInt(canarySlider.value);
+            
+            log(`📊 Estados: AB=${isABActive}, Canary=${isCanaryActive}, AB=${abValue}%, Canary=${canaryValue}%`);
+            
+            // Calcular porcentajes
+            const percentages = {
+                'version-a': isABActive ? abValue : 100,
+                'version-b': isABActive ? (100 - abValue) : 0,
+                'weblogic-a': isCanaryActive ? (100 - canaryValue) : 100,
+                'weblogic-b': isCanaryActive ? canaryValue : 0,
+                'feature-flags': 100
+            };
+            
+            log(`📊 Porcentajes: ${JSON.stringify(percentages)}`);
+            
+            // Actualizar cada URL
+            Object.entries(percentages).forEach(([urlKey, percentage]) => {
+                // Actualizar porcentaje
+                const trafficSpan = document.getElementById(`traffic-${urlKey}`);
+                if (trafficSpan) {
+                    trafficSpan.textContent = `${percentage}%`;
+                    log(`✅ ${urlKey}: porcentaje actualizado a ${percentage}%`);
+                } else {
+                    log(`❌ ${urlKey}: elemento traffic no encontrado`);
+                }
+                
+                // Actualizar color de tarjeta
+                const urlCard = document.getElementById(`url-${urlKey}`);
+                if (urlCard) {
+                    urlCard.classList.remove('active', 'inactive', 'partial');
+                    if (percentage === 100) {
+                        urlCard.classList.add('active');
+                        log(`🟢 ${urlKey}: VERDE (100%)`);
+                    } else if (percentage === 0) {
+                        urlCard.classList.add('inactive');
+                        log(`🔴 ${urlKey}: ROJO (0%)`);
+                    } else {
+                        urlCard.classList.add('partial');
+                        log(`🟡 ${urlKey}: AMARILLO (${percentage}%)`);
+                    }
+                } else {
+                    log(`❌ ${urlKey}: elemento card no encontrado`);
+                }
+            });
+            
+            log('✅ URLs actualizadas completamente');
+        }
+        
+        function updateChart() {
+            if (!trafficChart) {
+                log('❌ Gráfico no inicializado');
+                return;
+            }
+            
+            log('📊 Actualizando gráfico...');
+            
+            // Obtener estados
+            const abToggle = document.getElementById('ab-toggle');
+            const abSlider = document.getElementById('ab-slider');
+            const canaryToggle = document.getElementById('canary-toggle');
+            const canarySlider = document.getElementById('canary-slider');
+            
+            const isABActive = abToggle.checked;
+            const isCanaryActive = canaryToggle.checked;
+            const abValue = parseInt(abSlider.value);
+            const canaryValue = parseInt(canarySlider.value);
+            
+            // Calcular porcentajes
+            const versionA = isABActive ? abValue : 100;
+            const versionB = isABActive ? (100 - abValue) : 0;
+            const weblogicA = isCanaryActive ? (100 - canaryValue) : 100;
+            const weblogicB = isCanaryActive ? canaryValue : 0;
+            
+            log(`📊 Gráfico: A=${versionA}%, B=${versionB}%, WL-A=${weblogicA}%, WL-B=${weblogicB}%`);
+            
+            // Actualizar datos
+            trafficChart.data.datasets[0].data = [versionA, versionB, weblogicA, weblogicB];
+            
+            // Actualizar labels
+            trafficChart.data.labels = [
+                `Version A (${versionA}%)`,
+                `Version B (${versionB}%)`,
+                `WebLogic A (${weblogicA}%)`,
+                `WebLogic B (${weblogicB}%)`
+            ];
+            
+            // Actualizar colores
+            const colors = [
+                versionA === 100 ? '#2ed573' : versionA === 0 ? '#ff4757' : '#ffa502',
+                versionB === 100 ? '#2ed573' : versionB === 0 ? '#ff4757' : '#ffa502',
+                weblogicA === 100 ? '#4834d4' : weblogicA === 0 ? '#ff4757' : '#ffa502',
+                weblogicB === 100 ? '#2ed573' : weblogicB === 0 ? '#ff4757' : '#ffa502'
+            ];
+            
+            trafficChart.data.datasets[0].backgroundColor = colors;
+            trafficChart.update('none');
+            
+            log('✅ Gráfico actualizado');
+        }
+        
+        function testAll() {
+            log('🧪 INICIANDO PRUEBA COMPLETA...');
+            updateURLs();
+            updateChart();
+            log('🧪 PRUEBA COMPLETADA');
+        }
+        
+        function setupEventListeners() {
+            log('🎛️ Configurando event listeners...');
+            
+            // A/B Toggle
+            document.getElementById('ab-toggle').addEventListener('change', function() {
+                isABEnabled = this.checked;
+                log(`🎯 A/B Testing: ${isABEnabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+                updateURLs();
+                updateChart();
+            });
+            
+            // A/B Slider
+            document.getElementById('ab-slider').addEventListener('input', function() {
+                const value = parseInt(this.value);
+                document.getElementById('ab-value').textContent = value + '%';
+                log(`🎯 A/B Slider: ${value}%`);
+                updateURLs();
+                updateChart();
+            });
+            
+            // Canary Toggle
+            document.getElementById('canary-toggle').addEventListener('change', function() {
+                isCanaryEnabled = this.checked;
+                log(`🚀 Canary: ${isCanaryEnabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+                updateURLs();
+                updateChart();
+            });
+            
+            // Canary Slider
+            document.getElementById('canary-slider').addEventListener('input', function() {
+                const value = parseInt(this.value);
+                document.getElementById('canary-value').textContent = value + '%';
+                log(`🚀 Canary Slider: ${value}%`);
+                updateURLs();
+                updateChart();
+            });
+            
+            log('✅ Event listeners configurados');
+        }
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Iniciando aplicación de prueba...');
+            
+            if (typeof Chart === 'undefined') {
+                log('❌ Chart.js NO cargado');
+                return;
+            } else {
+                log('✅ Chart.js cargado correctamente');
+            }
+            
+            initChart();
+            setupEventListeners();
+            updateURLs();
+            updateChart();
+            
+            log('✅ Aplicación de prueba lista');
+            log('🧪 Usa los controles para probar funcionalidad');
+        });
+    </script>
+</body>
+</html>

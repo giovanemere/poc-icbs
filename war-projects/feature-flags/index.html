@@ -3,52 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Feature Flags - Control de Versiones</title>
+    <title>🚩 Feature Flags - Control de Versiones WebLogic</title>
     <style>
+        :root {
+            --primary-color: #2196F3;
+            --success-color: #4CAF50;
+            --warning-color: #FF9800;
+            --danger-color: #FF5722;
+            --dark-color: #333;
+            --light-bg: #f9f9f9;
+            --border-color: #ddd;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
             line-height: 1.6;
-            color: #333;
+            color: var(--dark-color);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
+        
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f9f9f9;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(10px);
         }
+        
         h1 {
-            color: #2196F3;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
-        .feature {
-            margin-bottom: 20px;
+        
+        .system-info {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .system-info h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.5em;
+        }
+        
+        .urls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .url-card {
+            background: rgba(255, 255, 255, 0.2);
             padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 8px;
+            text-align: center;
         }
+        
+        .url-card a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .url-card a:hover {
+            text-decoration: underline;
+        }
+        
+        .feature {
+            margin-bottom: 25px;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
         .feature-enabled {
-            background-color: #e6f7ff;
+            background: linear-gradient(45deg, #e6f7ff, #f0f9ff);
             border-color: #91d5ff;
         }
+        
         .feature-disabled {
-            background-color: #fff1f0;
+            background: linear-gradient(45deg, #fff1f0, #fff7f6);
             border-color: #ffa39e;
         }
+        
         .toggle {
             display: inline-block;
             width: 60px;
             height: 34px;
             position: relative;
-            margin-right: 10px;
+            margin-right: 15px;
+            vertical-align: middle;
         }
+        
         .toggle input {
             opacity: 0;
             width: 0;
             height: 0;
         }
+        
         .slider {
             position: absolute;
             cursor: pointer;
@@ -60,6 +130,7 @@
             transition: .4s;
             border-radius: 34px;
         }
+        
         .slider:before {
             position: absolute;
             content: "";
@@ -71,70 +142,190 @@
             transition: .4s;
             border-radius: 50%;
         }
+        
         input:checked + .slider {
-            background-color: #2196F3;
+            background-color: var(--success-color);
         }
+        
         input:checked + .slider:before {
             transform: translateX(26px);
         }
-        .links {
-            margin-top: 20px;
+        
+        .feature h2 {
+            margin: 0 0 10px 0;
+            display: flex;
+            align-items: center;
+            font-size: 1.3em;
         }
+        
+        .links {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
         .links a {
-            display: inline-block;
-            margin-right: 10px;
-            margin-bottom: 10px;
-            padding: 10px 15px;
-            background-color: #2196F3;
+            display: block;
+            padding: 15px 20px;
+            text-align: center;
             color: white;
             text-decoration: none;
-            border-radius: 4px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        
         .links a:hover {
-            background-color: #0b7dda;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
+        
         .version-a {
-            background-color: #4CAF50;
+            background: linear-gradient(45deg, var(--success-color), #66bb6a);
         }
-        .version-a:hover {
-            background-color: #45a049;
-        }
+        
         .version-b {
-            background-color: #FF9800;
+            background: linear-gradient(45deg, var(--warning-color), #ffb74d);
         }
-        .version-b:hover {
-            background-color: #e68a00;
+        
+        .btn-redirect {
+            background: linear-gradient(45deg, var(--danger-color), #ff7043);
         }
+        
+        .btn-dashboard {
+            background: linear-gradient(45deg, var(--primary-color), #42a5f5);
+        }
+        
+        .btn-admin {
+            background: linear-gradient(45deg, #9c27b0, #ba68c8);
+        }
+        
         .version-info {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
+            margin-top: 30px;
+            padding: 20px;
+            background: linear-gradient(45deg, #f0f0f0, #fafafa);
+            border-radius: 10px;
+            border-left: 5px solid var(--primary-color);
         }
+        
         .current-version {
             font-weight: bold;
-            color: #2196F3;
+            color: var(--primary-color);
+            font-size: 1.2em;
         }
-        .btn-redirect {
-            background-color: #FF5722;
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
         }
-        .btn-redirect:hover {
-            background-color: #e64a19;
+        
+        .status-online {
+            background-color: var(--success-color);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .status-offline {
+            background-color: var(--danger-color);
+            box-shadow: 0 0 10px rgba(255, 87, 34, 0.5);
+        }
+        
+        .navigation {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .navigation h3 {
+            margin: 0 0 15px 0;
+            color: var(--primary-color);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .links {
+                grid-template-columns: 1fr;
+            }
+            
+            .urls-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Feature Flags - Control de Versiones</h1>
+        <h1>🚩 Feature Flags - Control de Versiones WebLogic</h1>
         
-        <p>Esta aplicación permite controlar las características y versiones de la aplicación.</p>
+        <div class="system-info">
+            <h2>🎛️ Sistema de Gestión de Despliegues</h2>
+            <p>Control avanzado de Feature Flags, A/B Testing y Canary Deployment</p>
+            
+            <div class="urls-grid">
+                <div class="url-card">
+                    <strong>🌐 Frontend Principal</strong><br>
+                    <a href="http://localhost:8100/" target="_blank">localhost:8100</a>
+                </div>
+                <div class="url-card">
+                    <strong>📊 Dashboard de Tráfico</strong><br>
+                    <a href="http://localhost:8084/" target="_blank">localhost:8084</a>
+                </div>
+                <div class="url-card">
+                    <strong>🎛️ Panel HAProxy</strong><br>
+                    <a href="http://localhost:8092/index-functional.html" target="_blank">localhost:8092</a>
+                </div>
+                <div class="url-card">
+                    <strong>📈 HAProxy Stats</strong><br>
+                    <a href="http://localhost:8404/stats" target="_blank">localhost:8404/stats</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="navigation">
+            <h3>🔗 Enlaces Rápidos del Sistema</h3>
+            <div class="links">
+                <a href="http://localhost:8100/version-a/" class="version-a" target="_blank">
+                    <span class="status-indicator status-online"></span>
+                    🅰️ Versión A
+                </a>
+                <a href="http://localhost:8100/version-b/" class="version-b" target="_blank">
+                    <span class="status-indicator status-online"></span>
+                    🅱️ Versión B
+                </a>
+                <a href="http://localhost:8084/" class="btn-dashboard" target="_blank">
+                    📊 Dashboard de Tráfico
+                </a>
+                <a href="http://localhost:8092/index-functional.html" class="btn-admin" target="_blank">
+                    🎛️ Panel de Administración
+                </a>
+                <a href="http://localhost:8100/ff4j-simple/" class="btn-redirect" target="_blank">
+                    🚩 FF4J Console
+                </a>
+            </div>
+        </div>
         
         <div class="version-info">
-            <h2>Control de Versiones A/B</h2>
+            <h2>🎯 Control de Versiones A/B Testing</h2>
             <p>Versión actual: <span class="current-version" id="currentVersion">A</span></p>
             <p>
-                <strong>Versión A URL:</strong> <a href="http://localhost:8080/version-a/" target="_blank">http://localhost:8080/version-a/</a><br>
-                <strong>Versión B URL:</strong> <a href="http://localhost:8080/version-b/" target="_blank">http://localhost:8080/version-b/</a>
+                <strong>🅰️ Versión A URL:</strong> <a href="http://localhost:8100/version-a/" target="_blank">http://localhost:8100/version-a/</a><br>
+                <strong>🅱️ Versión B URL:</strong> <a href="http://localhost:8100/version-b/" target="_blank">http://localhost:8100/version-b/</a><br>
+                <strong>📊 Dashboard:</strong> <a href="http://localhost:8084/" target="_blank">http://localhost:8084/</a><br>
+                <strong>🎛️ Panel Admin:</strong> <a href="http://localhost:8092/index-functional.html" target="_blank">http://localhost:8092/index-functional.html</a>
             </p>
         </div>
         
@@ -144,9 +335,9 @@
                     <input type="checkbox" id="toggle-new-ui" checked>
                     <span class="slider"></span>
                 </label>
-                Nuevo Diseño de UI
+                🎨 Nuevo Diseño de UI
             </h2>
-            <p>Habilita el nuevo diseño de interfaz de usuario (Versión B).</p>
+            <p>Habilita el nuevo diseño de interfaz de usuario (Versión B). Cuando está activo, redirige automáticamente a la versión B con las nuevas características visuales.</p>
         </div>
         
         <div class="feature feature-disabled">
@@ -155,19 +346,135 @@
                     <input type="checkbox" id="toggle-version-b">
                     <span class="slider"></span>
                 </label>
-                Versión B
+                🚀 Versión B (Canary)
             </h2>
-            <p>Activa la versión B (desactivado = versión A).</p>
+            <p>Activa la versión B como versión principal. Desactivado = versión A (estable). Esto controla qué versión se muestra por defecto a los usuarios.</p>
         </div>
         
-        <div class="links">
-            <a href="http://localhost:8080/version-a/" class="version-a" target="_blank">Ver Versión A</a>
-            <a href="http://localhost:8080/version-b/" class="version-b" target="_blank">Ver Versión B</a>
-            <a href="#" class="btn-redirect" id="btnRedirect">Ir a Versión con Nuevo Diseño</a>
+        <div class="feature feature-enabled">
+            <h2>
+                <label class="toggle">
+                    <input type="checkbox" id="toggle-ab-testing" checked>
+                    <span class="slider"></span>
+                </label>
+                🎯 A/B Testing
+            </h2>
+            <p>Habilita el testing A/B automático. Cuando está activo, el tráfico se distribuye entre las versiones A y B según la configuración del dashboard de tráfico.</p>
+        </div>
+        
+        <div class="feature feature-disabled">
+            <h2>
+                <label class="toggle">
+                    <input type="checkbox" id="toggle-canary">
+                    <span class="slider"></span>
+                </label>
+                🐦 Canary Deployment
+            </h2>
+            <p>Activa el despliegue canary. Permite dirigir un porcentaje controlado del tráfico a la nueva versión para validar su estabilidad antes del despliegue completo.</p>
         </div>
     </div>
     
-    <!-- Incluir el script de feature flags -->
-    <script src="js/feature-flags.js"></script>
+    <script>
+        // Feature Flags JavaScript mejorado
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚩 Feature Flags System loaded');
+            
+            // Elementos del DOM
+            const toggleNewUI = document.getElementById('toggle-new-ui');
+            const toggleVersionB = document.getElementById('toggle-version-b');
+            const toggleABTesting = document.getElementById('toggle-ab-testing');
+            const toggleCanary = document.getElementById('toggle-canary');
+            const currentVersionSpan = document.getElementById('currentVersion');
+            
+            // Estado inicial
+            updateCurrentVersion();
+            
+            // Event listeners
+            toggleNewUI.addEventListener('change', function() {
+                updateFeatureClass(this.closest('.feature'), this.checked);
+                updateCurrentVersion();
+                console.log('🎨 New UI:', this.checked ? 'Enabled' : 'Disabled');
+            });
+            
+            toggleVersionB.addEventListener('change', function() {
+                updateFeatureClass(this.closest('.feature'), this.checked);
+                updateCurrentVersion();
+                console.log('🚀 Version B:', this.checked ? 'Enabled' : 'Disabled');
+            });
+            
+            toggleABTesting.addEventListener('change', function() {
+                updateFeatureClass(this.closest('.feature'), this.checked);
+                console.log('🎯 A/B Testing:', this.checked ? 'Enabled' : 'Disabled');
+                
+                if (this.checked) {
+                    // Simular activación de A/B Testing
+                    fetch('http://localhost:8084/api/ab/enable', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({percentage: 50})
+                    }).catch(e => console.log('Dashboard API not available'));
+                }
+            });
+            
+            toggleCanary.addEventListener('change', function() {
+                updateFeatureClass(this.closest('.feature'), this.checked);
+                console.log('🐦 Canary Deployment:', this.checked ? 'Enabled' : 'Disabled');
+                
+                if (this.checked) {
+                    // Simular activación de Canary
+                    fetch('http://localhost:8084/api/canary/enable', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({percentage: 20})
+                    }).catch(e => console.log('Dashboard API not available'));
+                }
+            });
+            
+            function updateFeatureClass(featureElement, enabled) {
+                if (enabled) {
+                    featureElement.classList.remove('feature-disabled');
+                    featureElement.classList.add('feature-enabled');
+                } else {
+                    featureElement.classList.remove('feature-enabled');
+                    featureElement.classList.add('feature-disabled');
+                }
+            }
+            
+            function updateCurrentVersion() {
+                let version = 'A';
+                if (toggleVersionB.checked) {
+                    version = 'B';
+                } else if (toggleNewUI.checked) {
+                    version = 'A (con nuevo UI)';
+                }
+                currentVersionSpan.textContent = version;
+            }
+            
+            // Verificar conectividad con APIs
+            setTimeout(checkAPIConnectivity, 1000);
+            
+            function checkAPIConnectivity() {
+                // Verificar Dashboard de Tráfico
+                fetch('http://localhost:8084/api/health')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('✅ Dashboard de Tráfico conectado:', data.status);
+                    })
+                    .catch(e => {
+                        console.log('⚠️ Dashboard de Tráfico no disponible');
+                    });
+                
+                // Verificar API de Administración
+                fetch('http://localhost:8093/api/health')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('✅ API de Administración conectada:', data.status);
+                    })
+                    .catch(e => {
+                        console.log('⚠️ API de Administración no disponible');
+                    });
+            }
+        });
+    </script>
 </body>
 </html>

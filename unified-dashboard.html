@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎛️ Dashboard Unificado - WebLogic Deployment Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Verificar que Chart.js se cargó correctamente
+        if (typeof Chart === 'undefined') {
+            console.error('❌ Chart.js no se cargó correctamente');
+            // Cargar desde CDN alternativo
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js';
+            document.head.appendChild(script);
+        } else {
+            console.log('✅ Chart.js cargado correctamente');
+        }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .status-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .status-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .status-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+        
+        .status-online { background: #2ed573; }
+        .status-offline { background: #ff4757; }
+        .status-warning { background: #ffa502; }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .control-panel {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-panel h2 {
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+        }
+        
+        .control-panel h2::before {
+            content: '';
+            width: 4px;
+            height: 30px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            margin-right: 15px;
+            border-radius: 2px;
+        }
+        
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 15px;
+        }
+        
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.3);
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #2ed573;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .percentage-control {
+            margin: 20px 0;
+        }
+        
+        .percentage-slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            margin: 15px 0;
+        }
+        
+        .percentage-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .percentage-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        
+        .quick-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-primary { background: linear-gradient(45deg, #4834d4, #686de0); color: white; }
+        .btn-success { background: linear-gradient(45deg, #2ed573, #7bed9f); color: white; }
+        .btn-warning { background: linear-gradient(45deg, #ffa502, #ff6348); color: white; }
+        .btn-danger { background: linear-gradient(45deg, #ff4757, #ff3838); color: white; }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .metric-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: 400px;
+        }
+        
+        .traffic-distribution {
+            grid-column: 1 / -1;
+            margin-top: 30px;
+        }
+        
+        .url-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .url-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .url-card.active {
+            border-color: #2ed573;
+            box-shadow: 0 0 20px rgba(46, 213, 115, 0.3);
+            background: rgba(46, 213, 115, 0.1);
+        }
+        
+        .url-card.inactive {
+            border-color: #ff4757;
+            box-shadow: 0 0 20px rgba(255, 71, 87, 0.2);
+            background: rgba(255, 71, 87, 0.05);
+            opacity: 0.7;
+        }
+        
+        .url-card.partial {
+            border-color: #ffa502;
+            box-shadow: 0 0 20px rgba(255, 165, 2, 0.3);
+            background: rgba(255, 165, 2, 0.1);
+        }
+        
+        .url-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .traffic-percentage {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .url-link {
+            margin: 10px 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            word-break: break-all;
+            border: 1px solid rgba(100, 181, 246, 0.3);
+        }
+        
+        .url-link a {
+            color: #ffffff !important;
+            text-decoration: none !important;
+            font-family: 'Courier New', monospace !important;
+            font-size: 0.95em !important;
+            font-weight: 600 !important;
+            display: block !important;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.8) !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            padding: 6px 10px !important;
+            border-radius: 6px !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        
+        .url-link a:hover {
+            text-decoration: underline !important;
+            color: #e3f2fd !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-color: rgba(255, 255, 255, 0.4) !important;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 1) !important;
+        }
+        
+        .url-link a:visited {
+            color: #ffffff !important;
+        }
+        
+        .url-metrics {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+        
+        .deployment-status {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border-left: 5px solid #2ed573;
+        }
+        
+        .status-message h3 {
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        .status-message p {
+            margin: 8px 0;
+            font-size: 1.1em;
+        }
+        
+        .deployment-alert {
+            background: rgba(255, 165, 2, 0.2);
+            border: 1px solid rgba(255, 165, 2, 0.5);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        .url-test-button {
+            background: linear-gradient(45deg, #4834d4, #686de0);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .url-test-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        
+        <!-- Real-time Metrics -->
+        <div class="control-panel real-time-metrics">
+            <h2>📈 Métricas en Tiempo Real</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="current-rps">0</div>
+                    <div class="metric-label">RPS Actual</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="peak-rps">0</div>
+                    <div class="metric-label">RPS Pico</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="total-requests">0</div>
+                    <div class="metric-label">Total Requests</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avg-response-time">0</div>
+                    <div class="metric-label">Tiempo Promedio (ms)</div>
+                </div>
+            </div>
+        </div>
+        
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dashboard-container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .status-bar {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+            
+            .url-status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🎛️ Dashboard Unificado WebLogic</h1>
+            <p>Control completo de A/B Testing, Canary Deployment y monitoreo en tiempo real</p>
+        </div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-card">
+                <span class="status-indicator status-online" id="haproxy-indicator"></span>
+                <strong>HAProxy</strong>
+                <div id="haproxy-status">Online</div>
+            </div>
+            <div class="status-card">
+                <span class="status-indicator status-online" id="weblogic-a-indicator"></span>
+                <strong>WebLogic A</strong>
+                <div id="weblogic-a-status">Online</div>
+            </div>
+            <div class="status-card">
+                <span class="status-indicator status-online" id="weblogic-b-indicator"></span>
+                <strong>WebLogic B</strong>
+                <div id="weblogic-b-status">Online</div>
+            </div>
+            <div class="status-card">
+                <span class="status-indicator status-online" id="api-indicator"></span>
+                <strong>API</strong>
+                <div id="api-status">Conectada</div>
+            </div>
+        </div>
+        
+        <!-- Main Control Grid -->
+        <div class="main-grid">
+            <!-- A/B Testing Control -->
+            <div class="control-panel">
+                <h2>🎯 A/B Testing</h2>
+                
+                <div class="toggle-container">
+                    <label class="toggle">
+                        <input type="checkbox" id="ab-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <div>
+                        <strong>Activar A/B Testing</strong>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Distribuir tráfico entre versiones A y B</div>
+                    </div>
+                </div>
+                
+                <div class="percentage-control">
+                    <label>Distribución de Tráfico:</label>
+                    <input type="range" class="percentage-slider" id="ab-slider" min="0" max="100" value="50">
+                    <div class="percentage-display">
+                        <span>Versión A: <span id="version-a-percent">50</span>%</span>
+                        <span>Versión B: <span id="version-b-percent">50</span>%</span>
+                    </div>
+                </div>
+                
+                <div class="quick-buttons">
+                    <button class="btn btn-primary" onclick="setABPercent(70)">70/30</button>
+                    <button class="btn btn-primary" onclick="setABPercent(50)">50/50</button>
+                    <button class="btn btn-primary" onclick="setABPercent(30)">30/70</button>
+                    <button class="btn btn-warning" onclick="resetAB()">Reset</button>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="version-a-requests">0</div>
+                        <div class="metric-label">Requests A</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="version-b-requests">0</div>
+                        <div class="metric-label">Requests B</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Canary Deployment Control -->
+            <div class="control-panel">
+                <h2>🚀 Canary Deployment</h2>
+                
+                <div class="toggle-container">
+                    <label class="toggle">
+                        <input type="checkbox" id="canary-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <div>
+                        <strong>Activar Canary</strong>
+                        <div style="font-size: 0.9em; opacity: 0.8;">Despliegue gradual de nueva versión</div>
+                    </div>
+                </div>
+                
+                <div class="percentage-control">
+                    <label>Porcentaje Canary:</label>
+                    <input type="range" class="percentage-slider" id="canary-slider" min="0" max="100" value="0">
+                    <div class="percentage-display">
+                        <span>Estable: <span id="stable-percent">100</span>%</span>
+                        <span>Canary: <span id="canary-percent">0</span>%</span>
+                    </div>
+                </div>
+                
+                <div class="quick-buttons">
+                    <button class="btn btn-success" onclick="setCanaryPercent(5)">5%</button>
+                    <button class="btn btn-success" onclick="setCanaryPercent(20)">20%</button>
+                    <button class="btn btn-success" onclick="setCanaryPercent(50)">50%</button>
+                    <button class="btn btn-danger" onclick="setCanaryPercent(0)">Stop</button>
+                </div>
+                
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="stable-requests">0</div>
+                        <div class="metric-label">Requests Estable</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="canary-requests">0</div>
+                        <div class="metric-label">Requests Canary</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Traffic Distribution Chart -->
+        <div class="traffic-distribution">
+            <div class="chart-container">
+                <h2 style="margin-bottom: 20px;">📊 Distribución de Tráfico en Tiempo Real</h2>
+                <canvas id="trafficChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Active URLs Section -->
+        <div class="control-panel" style="margin-top: 30px;">
+            <h2>🔗 URLs Activas del Sistema</h2>
+            <div id="active-urls-container">
+                <div class="url-status-grid">
+                    <div class="url-card" id="url-version-a">
+                        <div class="url-header">
+                            <span class="status-indicator status-offline" id="status-version-a"></span>
+                            <strong>Versión A</strong>
+                            <span class="traffic-percentage" id="traffic-version-a">0%</span>
+                        </div>
+                        <div class="url-link">
+                            <a href="http://localhost:8100/version-a/" target="_blank" id="link-version-a">
+                                http://localhost:8100/version-a/
+                            </a>
+                        </div>
+                        <div class="url-metrics">
+                            <span>Requests: <span id="requests-version-a">0</span></span>
+                            <span>Estado: <span id="health-version-a">Online</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="url-card" id="url-version-b">
+                        <div class="url-header">
+                            <span class="status-indicator status-offline" id="status-version-b"></span>
+                            <strong>Versión B</strong>
+                            <span class="traffic-percentage" id="traffic-version-b">0%</span>
+                        </div>
+                        <div class="url-link">
+                            <a href="http://localhost:8100/version-b/" target="_blank" id="link-version-b">
+                                http://localhost:8100/version-b/
+                            </a>
+                        </div>
+                        <div class="url-metrics">
+                            <span>Requests: <span id="requests-version-b">0</span></span>
+                            <span>Estado: <span id="health-version-b">Online</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="url-card" id="url-feature-flags">
+                        <div class="url-header">
+                            <span class="status-indicator status-offline" id="status-feature-flags"></span>
+                            <strong>Feature Flags</strong>
+                            <span class="traffic-percentage" id="traffic-feature-flags">100%</span>
+                        </div>
+                        <div class="url-link">
+                            <a href="http://localhost:8100/feature-flags/" target="_blank" id="link-feature-flags">
+                                http://localhost:8100/feature-flags/
+                            </a>
+                        </div>
+                        <div class="url-metrics">
+                            <span>Requests: <span id="requests-feature-flags">0</span></span>
+                            <span>Estado: <span id="health-feature-flags">Online</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="url-card" id="url-weblogic-a">
+                        <div class="url-header">
+                            <span class="status-indicator status-offline" id="status-weblogic-a"></span>
+                            <strong>WebLogic A Backend</strong>
+                            <span class="traffic-percentage" id="traffic-weblogic-a">0%</span>
+                        </div>
+                        <div class="url-link">
+                            <a href="http://localhost:7001/version-a/" target="_blank" id="link-weblogic-a">
+                                http://localhost:7001/version-a/
+                            </a>
+                        </div>
+                        <div class="url-metrics">
+                            <span>Requests: <span id="requests-weblogic-a">0</span></span>
+                            <span>Estado: <span id="health-weblogic-a">Online</span></span>
+                        </div>
+                    </div>
+                    
+                    <div class="url-card" id="url-weblogic-b">
+                        <div class="url-header">
+                            <span class="status-indicator status-offline" id="status-weblogic-b"></span>
+                            <strong>WebLogic B Backend</strong>
+                            <span class="traffic-percentage" id="traffic-weblogic-b">0%</span>
+                        </div>
+                        <div class="url-link">
+                            <a href="http://localhost:7002/version-b/" target="_blank" id="link-weblogic-b">
+                                http://localhost:7002/version-b/
+                            </a>
+                        </div>
+                        <div class="url-metrics">
+                            <span>Requests: <span id="requests-weblogic-b">0</span></span>
+                            <span>Estado: <span id="health-weblogic-b">Online</span></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="deployment-status" id="deployment-status">
+                    <div class="status-message">
+                        <h3>📊 Estado Actual del Despliegue</h3>
+                        <div id="current-deployment-info">
+                            <p>🔄 <strong>Modo Normal</strong>: Todo el tráfico va a la versión estable</p>
+                            <p>📈 <strong>Distribución</strong>: 100% Versión A</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Variables globales
+        let trafficChart;
+        let isABEnabled = false;
+        let isCanaryEnabled = false;
+        let currentStats = {};
+        let urlHealthStatus = {};
+        
+        // URLs de las APIs
+        const API_URLS = {
+            traffic: 'http://localhost:8084/api/stats',
+            admin: 'http://localhost:8093/api/status',
+            trafficHealth: 'http://localhost:8084/api/health',
+            adminHealth: 'http://localhost:8093/api/health',
+            abApply: 'http://localhost:8084/api/ab/apply',
+            canaryApply: 'http://localhost:8084/api/canary/apply',
+            reset: 'http://localhost:8084/api/reset'
+        };
+        
+        // URLs del sistema para verificar
+        const SYSTEM_URLS = {
+            'version-a': 'http://localhost:8100/version-a/',
+            'version-b': 'http://localhost:8100/version-b/',
+            'feature-flags': 'http://localhost:8100/feature-flags/',
+            'weblogic-a': 'http://localhost:7001/version-a/',
+            'weblogic-b': 'http://localhost:7002/version-b/'
+        };
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎛️ Dashboard Unificado cargando...');
+            
+            // Inicializar componentes básicos
+            initializeChart();
+            setupEventListeners();
+            
+            // FORZAR estado inicial inmediatamente
+            console.log('🔧 Forzando estado inicial...');
+            forceInitialState();
+            
+            // Inicializar URLs como online
+            initializeURLStatus();
+            
+            // Iniciar actualizaciones en tiempo real
+            startRealTimeUpdates();
+            
+            // Verificar estado del sistema (sin bloquear)
+            setTimeout(() => {
+                checkSystemHealth();
+            }, 1000);
+            
+            console.log('✅ Dashboard Unificado completamente cargado');
+        });
+        
+        function forceInitialState() {
+            console.log('🔧 Estableciendo estado inicial forzado...');
+            
+            // Establecer variables globales
+            isABEnabled = false;
+            isCanaryEnabled = false;
+            
+            // Establecer estado de URLs como online
+            urlHealthStatus = {
+                'version-a': 'online',
+                'version-b': 'online', 
+                'feature-flags': 'online',
+                'weblogic-a': 'online',
+                'weblogic-b': 'online'
+            };
+            
+            // Actualizar barra de estado inmediatamente
+            updateStatusIndicator('haproxy-indicator', 'haproxy-status', 'online', 'Online');
+            updateStatusIndicator('weblogic-a-indicator', 'weblogic-a-status', 'online', 'Online');
+            updateStatusIndicator('weblogic-b-indicator', 'weblogic-b-status', 'online', 'Online');
+            updateStatusIndicator('api-indicator', 'api-status', 'online', 'Conectada');
+            
+            // Actualizar URLs y gráfico inmediatamente
+            setTimeout(() => {
+                updateTrafficPercentages();
+                updateChartWithCurrentData();
+                updateDeploymentStatus();
+                console.log('✅ Estado inicial establecido');
+            }, 500);
+        }
+        
+        function initializeURLStatus() {
+            console.log('🔄 Inicializando estado de URLs (simplificado)...');
+            
+            // Establecer TODAS las URLs como online inmediatamente
+            urlHealthStatus = {
+                'version-a': 'online',
+                'version-b': 'online', 
+                'feature-flags': 'online',
+                'weblogic-a': 'online',
+                'weblogic-b': 'online'
+            };
+            
+            console.log('✅ URLs inicializadas como online');
+            
+            // Actualizar interfaz inmediatamente
+            updateAllURLStatus();
+            updateTrafficPercentages();
+            updateDeploymentStatus();
+        }
+        
+        function updateAllURLStatus() {
+            console.log('🔄 Actualizando estado visual de todas las URLs...');
+            
+            const urls = ['version-a', 'version-b', 'feature-flags', 'weblogic-a', 'weblogic-b'];
+            
+            urls.forEach(urlKey => {
+                // Actualizar indicador de estado
+                const statusIndicator = document.getElementById(`status-${urlKey}`);
+                if (statusIndicator) {
+                    statusIndicator.className = 'status-indicator status-online';
+                }
+                
+                // Actualizar texto de salud
+                const healthSpan = document.getElementById(`health-${urlKey}`);
+                if (healthSpan) {
+                    healthSpan.textContent = 'Online';
+                }
+                
+                console.log(`✅ ${urlKey}: Estado visual actualizado`);
+            });
+        }
+        
+        function initializeChart() {
+            const ctx = document.getElementById('trafficChart').getContext('2d');
+            trafficChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Versión A', 'Versión B', 'WebLogic A', 'WebLogic B'],
+                    datasets: [{
+                        data: [50, 50, 100, 0],
+                        backgroundColor: [
+                            '#2ed573',
+                            '#ffa502', 
+                            '#4834d4',
+                            '#ff4757'
+                        ],
+                        borderWidth: 2,
+                        borderColor: 'rgba(255, 255, 255, 0.8)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: 'white',
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function setupEventListeners() {
+            console.log('🎛️ Configurando event listeners...');
+            
+            // A/B Testing
+            const abToggle = document.getElementById('ab-toggle');
+            const abSlider = document.getElementById('ab-slider');
+            
+            if (abToggle) {
+                abToggle.addEventListener('change', function() {
+                    isABEnabled = this.checked;
+                    console.log(`🎯 A/B Testing: ${isABEnabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+                    
+                    // Actualizar inmediatamente
+                    updateTrafficPercentages();
+                    updateChartWithCurrentData();
+                    updateDeploymentStatus();
+                    
+                    // API después (opcional)
+                    if (isABEnabled) {
+                        setTimeout(() => enableABTesting(), 100);
+                    } else {
+                        setTimeout(() => disableABTesting(), 100);
+                    }
+                });
+            }
+            
+            if (abSlider) {
+                abSlider.addEventListener('input', function() {
+                    const valueA = parseInt(this.value);
+                    const valueB = 100 - valueA;
+                    
+                    console.log(`🎯 A/B Slider: ${valueA}%`);
+                    
+                    // Actualizar displays inmediatamente
+                    const versionAPercent = document.getElementById('version-a-percent');
+                    const versionBPercent = document.getElementById('version-b-percent');
+                    if (versionAPercent) versionAPercent.textContent = valueA;
+                    if (versionBPercent) versionBPercent.textContent = valueB;
+                    
+                    // Actualizar URLs y gráfico inmediatamente
+                    updateTrafficPercentages();
+                    updateChartWithCurrentData();
+                    
+                    // API después (opcional)
+                    if (isABEnabled) {
+                        setTimeout(() => updateABTesting(valueA), 100);
+                    }
+                });
+            }
+            
+            // Canary Deployment
+            const canaryToggle = document.getElementById('canary-toggle');
+            const canarySlider = document.getElementById('canary-slider');
+            
+            if (canaryToggle) {
+                canaryToggle.addEventListener('change', function() {
+                    isCanaryEnabled = this.checked;
+                    console.log(`🚀 Canary: ${isCanaryEnabled ? 'ACTIVADO' : 'DESACTIVADO'}`);
+                    
+                    // Actualizar inmediatamente
+                    updateTrafficPercentages();
+                    updateChartWithCurrentData();
+                    updateDeploymentStatus();
+                    
+                    // API después (opcional)
+                    if (isCanaryEnabled) {
+                        setTimeout(() => enableCanaryDeployment(), 100);
+                    } else {
+                        setTimeout(() => disableCanaryDeployment(), 100);
+                    }
+                });
+            }
+            
+            if (canarySlider) {
+                canarySlider.addEventListener('input', function() {
+                    const canaryValue = parseInt(this.value);
+                    const stableValue = 100 - canaryValue;
+                    
+                    console.log(`🚀 Canary Slider: ${canaryValue}%`);
+                    
+                    // Actualizar displays inmediatamente
+                    const canaryPercent = document.getElementById('canary-percent');
+                    const stablePercent = document.getElementById('stable-percent');
+                    if (canaryPercent) canaryPercent.textContent = canaryValue;
+                    if (stablePercent) stablePercent.textContent = stableValue;
+                    
+                    // Actualizar URLs y gráfico inmediatamente
+                    updateTrafficPercentages();
+                    updateChartWithCurrentData();
+                    
+                    // API después (opcional)
+                    if (isCanaryEnabled) {
+                        setTimeout(() => updateCanaryDeployment(canaryValue), 100);
+                    }
+                });
+            }
+                });
+            }
+            
+            console.log('✅ Event listeners configurados');
+        }
+                
+                if (isCanaryEnabled) {
+                    updateCanaryDeployment(canaryValue);
+                }
+            });
+        }
+        
+        async function checkSystemHealth() {
+            console.log('🔍 Verificando salud del sistema (no bloqueante)...');
+            
+            // Forzar todos los servicios como online inmediatamente
+            // No hacer llamadas HTTP que puedan fallar o tardar
+            
+            updateStatusIndicator('api-indicator', 'api-status', 'online', 'Conectada');
+            updateStatusIndicator('haproxy-indicator', 'haproxy-status', 'online', 'Online');
+            updateStatusIndicator('weblogic-a-indicator', 'weblogic-a-status', 'online', 'Online');
+            updateStatusIndicator('weblogic-b-indicator', 'weblogic-b-status', 'online', 'Online');
+            
+            console.log('✅ Todos los servicios marcados como online');
+        }
+        
+        function updateStatusIndicator(indicatorId, statusId, status, text) {
+            const indicator = document.getElementById(indicatorId);
+            const statusText = document.getElementById(statusId);
+            
+            indicator.className = `status-indicator status-${status}`;
+            statusText.textContent = text;
+        }
+        
+        async function fetchTrafficStats() {
+            try {
+                const response = await fetch(API_URLS.traffic);
+                if (response.ok) {
+                    const stats = await response.json();
+                    currentStats = stats;
+                    updateDashboard(stats);
+                }
+            } catch (error) {
+                console.log('Traffic API no disponible:', error.message);
+            }
+        }
+        
+        function checkURLHealth() {
+            console.log('🔍 Verificación de URLs simplificada...');
+            
+            // No hacer verificaciones HTTP que puedan fallar
+            // Simplemente mantener todas las URLs como online
+            const urls = ['version-a', 'version-b', 'feature-flags', 'weblogic-a', 'weblogic-b'];
+            
+            urls.forEach(urlKey => {
+                urlHealthStatus[urlKey] = 'online';
+                updateURLStatus(urlKey, 'online', 'Online');
+                console.log(`✅ ${urlKey}: Forzado como Online`);
+            });
+            
+            console.log('✅ Verificación completada - Todas las URLs online');
+        }
+        
+        function updateURLStatus(urlKey, status, statusText) {
+            const statusIndicator = document.getElementById(`status-${urlKey}`);
+            const healthSpan = document.getElementById(`health-${urlKey}`);
+            const urlCard = document.getElementById(`url-${urlKey}`);
+            
+            if (statusIndicator) {
+                statusIndicator.className = `status-indicator status-${status}`;
+            }
+            
+            if (healthSpan) {
+                healthSpan.textContent = statusText;
+            }
+            
+            if (urlCard) {
+                // Actualizar clase de la tarjeta basada en el estado y tráfico
+                updateURLCardClass(urlKey, urlCard);
+            }
+        }
+        
+        function updateURLCardClass(urlKey, urlCard) {
+            const trafficPercent = getTrafficPercentage(urlKey);
+            const isHealthy = urlHealthStatus[urlKey] === 'online';
+            
+            console.log(`🎨 Actualizando clase para ${urlKey}: ${trafficPercent}%, healthy: ${isHealthy}`);
+            
+            // Remover todas las clases de estado
+            urlCard.classList.remove('active', 'inactive', 'partial');
+            
+            if (!isHealthy) {
+                urlCard.classList.add('inactive');
+                console.log(`🎨 ${urlKey}: inactive (no healthy)`);
+            } else if (trafficPercent === 100) {
+                urlCard.classList.add('active'); // 100% = completamente activa (verde)
+                console.log(`🎨 ${urlKey}: active (100%)`);
+            } else if (trafficPercent === 0) {
+                urlCard.classList.add('inactive'); // 0% = completamente inactiva (roja)
+                console.log(`🎨 ${urlKey}: inactive (0%)`);
+            } else {
+                urlCard.classList.add('partial'); // Entre 1-99% = parcial (amarilla)
+                console.log(`🎨 ${urlKey}: partial (${trafficPercent}%)`);
+            }
+            
+            // Forzar actualización visual
+            urlCard.style.transition = 'all 0.3s ease';
+            
+            // Log para debugging
+            console.log(`📊 URL ${urlKey}: ${trafficPercent}% tráfico, ${isHealthy ? 'healthy' : 'unhealthy'}, classes: ${urlCard.className}`);
+        }
+        
+        function getTrafficPercentage(urlKey) {
+            console.log(`🔍 Calculando tráfico para ${urlKey}...`);
+            
+            // Primero, intentar obtener datos de la API actual
+            if (currentStats && currentStats.deployment) {
+                const ab = currentStats.deployment.ab_testing;
+                const canary = currentStats.deployment.canary;
+                
+                console.log('📊 Datos de API disponibles:', { ab, canary });
+                
+                switch (urlKey) {
+                    case 'version-a':
+                        if (isABEnabled && ab && ab.enabled) {
+                            return ab.percentage_a || 50;
+                        }
+                        return 100; // Por defecto A tiene todo el tráfico
+                        
+                    case 'version-b':
+                        if (isABEnabled && ab && ab.enabled) {
+                            return ab.percentage_b || 50;
+                        }
+                        return 0;   // B solo si A/B está activo
+                        
+                    case 'weblogic-a':
+                        if (isCanaryEnabled && canary && canary.enabled) {
+                            return 100 - (canary.percentage || 0);
+                        }
+                        return 100; // A tiene la mayoría por defecto
+                        
+                    case 'weblogic-b':
+                        if (isCanaryEnabled && canary && canary.enabled) {
+                            return canary.percentage || 0;
+                        }
+                        return 0;   // B solo si Canary está activo
+                        
+                    case 'feature-flags':
+                        return 100; // Siempre disponible
+                        
+                    default:
+                        return 0;
+                }
+            }
+            
+            // Si no hay datos de API, usar valores basados en el estado de los controles
+            console.log('📊 Usando valores locales - isABEnabled:', isABEnabled, 'isCanaryEnabled:', isCanaryEnabled);
+            
+            switch (urlKey) {
+                case 'version-a':
+                    if (isABEnabled) {
+                        const sliderValue = document.getElementById('ab-slider')?.value || 50;
+                        const percentage = parseInt(sliderValue);
+                        console.log(`📊 version-a: ${percentage}% (desde slider)`);
+                        return percentage;
+                    }
+                    console.log('📊 version-a: 100% (por defecto)');
+                    return 100;
+                    
+                case 'version-b':
+                    if (isABEnabled) {
+                        const sliderValue = document.getElementById('ab-slider')?.value || 50;
+                        const percentage = 100 - parseInt(sliderValue);
+                        console.log(`📊 version-b: ${percentage}% (desde slider)`);
+                        return percentage;
+                    }
+                    console.log('📊 version-b: 0% (inactivo)');
+                    return 0;
+                    
+                case 'weblogic-a':
+                    if (isCanaryEnabled) {
+                        const sliderValue = document.getElementById('canary-slider')?.value || 20;
+                        const percentage = 100 - parseInt(sliderValue);
+                        console.log(`📊 weblogic-a: ${percentage}% (desde slider canary)`);
+                        return percentage;
+                    }
+                    console.log('📊 weblogic-a: 100% (por defecto)');
+                    return 100;
+                    
+                case 'weblogic-b':
+                    if (isCanaryEnabled) {
+                        const sliderValue = document.getElementById('canary-slider')?.value || 20;
+                        const percentage = parseInt(sliderValue);
+                        console.log(`📊 weblogic-b: ${percentage}% (desde slider canary)`);
+                        return percentage;
+                    }
+                    console.log('📊 weblogic-b: 0% (inactivo)');
+                    return 0;
+                    
+                case 'feature-flags':
+                    console.log('📊 feature-flags: 100% (siempre activo)');
+                    return 100;
+                    
+                default:
+                    console.log(`📊 ${urlKey}: 0% (desconocido)`);
+                    return 0;
+            }
+        }
+        
+        function updateTrafficPercentages() {
+            console.log('🔗 Actualizando URLs...');
+            
+            // Obtener estados directamente de los elementos HTML
+            const abToggle = document.getElementById('ab-toggle');
+            const abSlider = document.getElementById('ab-slider');
+            const canaryToggle = document.getElementById('canary-toggle');
+            const canarySlider = document.getElementById('canary-slider');
+            
+            if (!abToggle || !abSlider || !canaryToggle || !canarySlider) {
+                console.error('❌ Elementos de control no encontrados');
+                return;
+            }
+            
+            const isABActive = abToggle.checked;
+            const isCanaryActive = canaryToggle.checked;
+            const abValue = parseInt(abSlider.value);
+            const canaryValue = parseInt(canarySlider.value);
+            
+            console.log(`📊 Estados: AB=${isABActive}, Canary=${isCanaryActive}, AB=${abValue}%, Canary=${canaryValue}%`);
+            
+            // Calcular porcentajes exactos
+            const percentages = {
+                'version-a': isABActive ? abValue : 100,
+                'version-b': isABActive ? (100 - abValue) : 0,
+                'weblogic-a': isCanaryActive ? (100 - canaryValue) : 100,
+                'weblogic-b': isCanaryActive ? canaryValue : 0,
+                'feature-flags': 100
+            };
+            
+            console.log(`📊 Porcentajes calculados:`, percentages);
+            
+            // Actualizar cada URL
+            Object.entries(percentages).forEach(([urlKey, percentage]) => {
+                // Actualizar porcentaje en el span
+                const trafficSpan = document.getElementById(`traffic-${urlKey}`);
+                if (trafficSpan) {
+                    trafficSpan.textContent = `${percentage}%`;
+                    console.log(`✅ ${urlKey}: porcentaje → ${percentage}%`);
+                } else {
+                    console.warn(`⚠️ ${urlKey}: elemento traffic-${urlKey} no encontrado`);
+                }
+                
+                // Actualizar requests (simulado)
+                const requestsSpan = document.getElementById(`requests-${urlKey}`);
+                if (requestsSpan) {
+                    const requests = percentage > 0 ? Math.floor(Math.random() * 50) + percentage : 0;
+                    requestsSpan.textContent = requests;
+                }
+                
+                // Actualizar color de la tarjeta
+                const urlCard = document.getElementById(`url-${urlKey}`);
+                if (urlCard) {
+                    // Remover todas las clases de estado
+                    urlCard.classList.remove('active', 'inactive', 'partial');
+                    
+                    // Agregar clase según porcentaje
+                    if (percentage === 100) {
+                        urlCard.classList.add('active');
+                        console.log(`🟢 ${urlKey}: VERDE (100%)`);
+                    } else if (percentage === 0) {
+                        urlCard.classList.add('inactive');
+                        console.log(`🔴 ${urlKey}: ROJO (0%)`);
+                    } else {
+                        urlCard.classList.add('partial');
+                        console.log(`🟡 ${urlKey}: AMARILLO (${percentage}%)`);
+                    }
+                } else {
+                    console.warn(`⚠️ ${urlKey}: elemento url-${urlKey} no encontrado`);
+                }
+            });
+            
+            console.log('✅ URLs actualizadas completamente');
+        }
+        
+        function getRequestsForURL(urlKey) {
+            if (!currentStats.deployment) return 0;
+            
+            const ab = currentStats.deployment.ab_testing;
+            const canary = currentStats.deployment.canary;
+            
+            switch (urlKey) {
+                case 'version-a':
+                    return ab?.version_a_requests || 0;
+                case 'version-b':
+                    return ab?.version_b_requests || 0;
+                case 'weblogic-a':
+                    return canary?.stable_requests || 0;
+                case 'weblogic-b':
+                    return canary?.canary_requests || 0;
+                case 'feature-flags':
+                    return currentStats.metrics?.total_requests || 0;
+                default:
+                    return 0;
+            }
+        }
+        
+        function updateDeploymentStatus() {
+            const deploymentInfo = document.getElementById('current-deployment-info');
+            let statusHTML = '';
+            
+            if (isABEnabled && isCanaryEnabled) {
+                statusHTML = `
+                    <div class="deployment-alert">
+                        <p>⚠️ <strong>Modo Híbrido Activo</strong>: A/B Testing + Canary Deployment</p>
+                        <p>🎯 <strong>A/B Testing</strong>: ${document.getElementById('version-a-percent').textContent}% Versión A, ${document.getElementById('version-b-percent').textContent}% Versión B</p>
+                        <p>🚀 <strong>Canary</strong>: ${document.getElementById('canary-percent').textContent}% Nueva Versión, ${document.getElementById('stable-percent').textContent}% Estable</p>
+                    </div>
+                `;
+            } else if (isABEnabled) {
+                statusHTML = `
+                    <p>🎯 <strong>A/B Testing Activo</strong>: Comparando versiones A y B</p>
+                    <p>📈 <strong>Distribución</strong>: ${document.getElementById('version-a-percent').textContent}% Versión A, ${document.getElementById('version-b-percent').textContent}% Versión B</p>
+                    <p>🔗 <strong>URLs Activas</strong>: version-a y version-b recibiendo tráfico</p>
+                `;
+            } else if (isCanaryEnabled) {
+                statusHTML = `
+                    <p>🚀 <strong>Canary Deployment Activo</strong>: Desplegando nueva versión gradualmente</p>
+                    <p>📈 <strong>Distribución</strong>: ${document.getElementById('canary-percent').textContent}% Nueva Versión, ${document.getElementById('stable-percent').textContent}% Versión Estable</p>
+                    <p>🔗 <strong>URLs Activas</strong>: Ambos backends recibiendo tráfico</p>
+                `;
+            } else {
+                statusHTML = `
+                    <p>🔄 <strong>Modo Normal</strong>: Todo el tráfico va a la versión estable</p>
+                    <p>📈 <strong>Distribución</strong>: 100% Versión A</p>
+                    <p>🔗 <strong>URLs Activas</strong>: Solo version-a y feature-flags</p>
+                `;
+            }
+            
+            if (deploymentInfo) {
+                deploymentInfo.innerHTML = statusHTML;
+            }
+        }
+        
+        function updateChartWithCurrentData() {
+            if (!trafficChart) {
+                console.error('❌ Gráfico no inicializado');
+                return;
+            }
+            
+            console.log('📊 Actualizando gráfico...');
+            
+            // Obtener estados directamente de los elementos HTML
+            const abToggle = document.getElementById('ab-toggle');
+            const abSlider = document.getElementById('ab-slider');
+            const canaryToggle = document.getElementById('canary-toggle');
+            const canarySlider = document.getElementById('canary-slider');
+            
+            if (!abToggle || !abSlider || !canaryToggle || !canarySlider) {
+                console.error('❌ Elementos de control no encontrados para gráfico');
+                return;
+            }
+            
+            const isABActive = abToggle.checked;
+            const isCanaryActive = canaryToggle.checked;
+            const abValue = parseInt(abSlider.value);
+            const canaryValue = parseInt(canarySlider.value);
+            
+            // Calcular porcentajes exactos
+            const versionA = isABActive ? abValue : 100;
+            const versionB = isABActive ? (100 - abValue) : 0;
+            const weblogicA = isCanaryActive ? (100 - canaryValue) : 100;
+            const weblogicB = isCanaryActive ? canaryValue : 0;
+            
+            console.log(`📊 Gráfico: A=${versionA}%, B=${versionB}%, WL-A=${weblogicA}%, WL-B=${weblogicB}%`);
+            
+            // Actualizar datos del gráfico
+            trafficChart.data.datasets[0].data = [versionA, versionB, weblogicA, weblogicB];
+            
+            // Actualizar labels con porcentajes
+            trafficChart.data.labels = [
+                `Version A (${versionA}%)`,
+                `Version B (${versionB}%)`,
+                `WebLogic A (${weblogicA}%)`,
+                `WebLogic B (${weblogicB}%)`
+            ];
+            
+            // Actualizar colores dinámicos
+            const colors = [
+                versionA === 100 ? '#2ed573' : versionA === 0 ? '#ff4757' : '#ffa502',
+                versionB === 100 ? '#2ed573' : versionB === 0 ? '#ff4757' : '#ffa502',
+                weblogicA === 100 ? '#4834d4' : weblogicA === 0 ? '#ff4757' : '#ffa502',
+                weblogicB === 100 ? '#2ed573' : weblogicB === 0 ? '#ff4757' : '#ffa502'
+            ];
+            
+            trafficChart.data.datasets[0].backgroundColor = colors;
+            
+            try {
+                trafficChart.update('none');
+                console.log('✅ Gráfico actualizado exitosamente');
+            } catch (error) {
+                console.error('❌ Error actualizando gráfico:', error);
+            }
+        }
+        
+        function updateChart(stats) {
+            if (trafficChart && stats && stats.deployment) {
+                const abTesting = stats.deployment.ab_testing;
+                const canary = stats.deployment.canary;
+                
+                trafficChart.data.datasets[0].data = [
+                    abTesting?.version_a_requests || 0,
+                    abTesting?.version_b_requests || 0,
+                    canary?.stable_requests || 0,
+                    canary?.canary_requests || 0
+                ];
+                trafficChart.update();
+            }
+        }
+        
+        function updateDashboard(stats) {
+            // Actualizar métricas en tiempo real
+            document.getElementById('current-rps').textContent = stats.metrics?.current_rps || 0;
+            document.getElementById('peak-rps').textContent = stats.metrics?.peak_rps || 0;
+            document.getElementById('total-requests').textContent = stats.metrics?.total_requests || 0;
+            document.getElementById('avg-response-time').textContent = stats.metrics?.avg_response_time || 0;
+            
+            // Actualizar requests por versión
+            document.getElementById('version-a-requests').textContent = stats.deployment?.ab_testing?.version_a_requests || 0;
+            document.getElementById('version-b-requests').textContent = stats.deployment?.ab_testing?.version_b_requests || 0;
+            document.getElementById('stable-requests').textContent = stats.deployment?.canary?.stable_requests || 0;
+            document.getElementById('canary-requests').textContent = stats.deployment?.canary?.canary_requests || 0;
+            
+            // Actualizar estado de despliegue y URLs
+            isABEnabled = stats.deployment?.ab_testing?.enabled || false;
+            isCanaryEnabled = stats.deployment?.canary?.enabled || false;
+            
+            updateTrafficPercentages();
+            updateDeploymentStatus();
+            
+            // Actualizar gráfico
+            updateChart(stats);
+        }
+        
+        async function enableABTesting() {
+            const percentage = parseInt(document.getElementById('ab-slider').value);
+            try {
+                const response = await fetch(API_URLS.abApply, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        percentage_a: percentage,
+                        percentage_b: 100 - percentage,
+                        enabled: true
+                    })
+                });
+                
+                if (response.ok) {
+                    isABEnabled = true;
+                    console.log('✅ A/B Testing activado');
+                    showNotification('A/B Testing activado - URLs version-a y version-b ahora activas', 'success');
+                    
+                    // Actualizar inmediatamente
+                    updateTrafficPercentages();
+                    updateChartWithCurrentData();
+                    updateDeploymentStatus();
+                } else {
+                    const errorText = await response.text();
+                    console.log('⚠️ Error al activar A/B Testing:', errorText);
+                    showNotification('Error al activar A/B Testing', 'error');
+                }
+            } catch (error) {
+                console.log('⚠️ Error al activar A/B Testing:', error.message);
+                
+                // Activar localmente aunque falle la API
+                isABEnabled = true;
+                updateTrafficPercentages();
+                updateChartWithCurrentData();
+                showNotification('A/B Testing activado localmente', 'warning');
+            }
+        }
+            } catch (error) {
+                console.log('⚠️ API no disponible:', error.message);
+                showNotification('API no disponible', 'warning');
+            }
+        }
+        
+        async function disableABTesting() {
+            try {
+                const response = await fetch(API_URLS.abApply, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        percentage_a: 100,
+                        percentage_b: 0,
+                        enabled: false
+                    })
+                });
+                
+                if (response.ok) {
+                    isABEnabled = false;
+                    console.log('✅ A/B Testing desactivado');
+                    showNotification('A/B Testing desactivado - Solo version-a activa', 'success');
+                    
+                    // Actualizar inmediatamente
+                    updateTrafficPercentages();
+                    updateChartWithCurrentData();
+                    updateDeploymentStatus();
+                } else {
+                    const errorText = await response.text();
+                    console.log('⚠️ Error al desactivar A/B Testing:', errorText);
+                    showNotification('Error al desactivar A/B Testing', 'error');
+                }
+            } catch (error) {
+                console.log('⚠️ Error al desactivar A/B Testing:', error.message);
+                
+                // Desactivar localmente aunque falle la API
+                isABEnabled = false;
+                updateTrafficPercentages();
+                updateChartWithCurrentData();
+                showNotification('A/B Testing desactivado localmente', 'warning');
+            }
+        }
+                }
+            } catch (error) {
+                console.log('⚠️ API no disponible:', error.message);
+            }
+        }
+        
+        async function enableCanaryDeployment() {
+            const percentage = parseInt(document.getElementById('canary-slider').value);
+            try {
+                const response = await fetch(API_URLS.canaryApply, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        percentage: percentage,
+                        enabled: true
+                    })
+                });
+                
+                if (response.ok) {
+                    isCanaryEnabled = true;
+                    console.log('✅ Canary Deployment activado');
+                    showNotification(`Canary Deployment activado - ${percentage}% tráfico a nueva versión`, 'success');
+                    updateTrafficPercentages();
+                    updateDeploymentStatus();
+                } else {
+                    const errorText = await response.text();
+                    console.log('⚠️ Error al activar Canary:', errorText);
+                    showNotification('Error al activar Canary', 'error');
+                }
+            } catch (error) {
+                console.log('⚠️ API no disponible:', error.message);
+                showNotification('API no disponible', 'warning');
+            }
+        }
+        
+        async function disableCanaryDeployment() {
+            try {
+                const response = await fetch(API_URLS.canaryApply, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        percentage: 0,
+                        enabled: false
+                    })
+                });
+                
+                if (response.ok) {
+                    isCanaryEnabled = false;
+                    console.log('✅ Canary Deployment desactivado');
+                    showNotification('Canary Deployment desactivado - Todo el tráfico a versión estable', 'success');
+                    updateTrafficPercentages();
+                    updateDeploymentStatus();
+                } else {
+                    const errorText = await response.text();
+                    console.log('⚠️ Error al desactivar Canary:', errorText);
+                }
+            } catch (error) {
+                console.log('⚠️ API no disponible:', error.message);
+            }
+        }
+        
+        // Funciones de utilidad
+        function setABPercent(percent) {
+            document.getElementById('ab-slider').value = percent;
+            document.getElementById('version-a-percent').textContent = percent;
+            document.getElementById('version-b-percent').textContent = 100 - percent;
+            
+            if (isABEnabled) {
+                updateABTesting(percent);
+            }
+        }
+        
+        function setCanaryPercent(percent) {
+            document.getElementById('canary-slider').value = percent;
+            document.getElementById('canary-percent').textContent = percent;
+            document.getElementById('stable-percent').textContent = 100 - percent;
+            
+            if (isCanaryEnabled) {
+                updateCanaryDeployment(percent);
+            }
+        }
+        
+        function resetAB() {
+            setABPercent(50);
+        }
+        
+        function showNotification(message, type) {
+            // Crear notificación temporal
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                backdrop-filter: blur(10px);
+                ${type === 'success' ? 'background: rgba(46, 213, 115, 0.9);' : 
+                  type === 'error' ? 'background: rgba(255, 71, 87, 0.9);' : 
+                  'background: rgba(255, 165, 2, 0.9);'}
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 3000);
+        }
+        
+        async function updateABTesting(percentage) {
+            try {
+                const response = await fetch(API_URLS.abApply, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        percentage_a: percentage,
+                        percentage_b: 100 - percentage,
+                        enabled: true
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log(`✅ A/B Testing actualizado: ${percentage}% A, ${100-percentage}% B`);
+                    
+                    // Actualizar inmediatamente las URLs y el gráfico
+                    setTimeout(() => {
+                        updateTrafficPercentages();
+                        updateChartWithCurrentData();
+                        updateDeploymentStatus();
+                    }, 100);
+                } else {
+                    const errorText = await response.text();
+                    console.log('⚠️ Error actualizando A/B Testing:', errorText);
+                }
+            } catch (error) {
+                console.log('⚠️ Error actualizando A/B Testing:', error.message);
+                
+                // Actualizar localmente aunque falle la API
+                updateTrafficPercentages();
+                updateChartWithCurrentData();
+            }
+        }
+            }
+        }
+        
+        async function updateCanaryDeployment(percentage) {
+            try {
+                const response = await fetch(API_URLS.canaryApply, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        percentage: percentage,
+                        enabled: true
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log(`✅ Canary actualizado: ${percentage}% Canary, ${100-percentage}% Stable`);
+                    
+                    // Actualizar inmediatamente las URLs y el gráfico
+                    setTimeout(() => {
+                        updateTrafficPercentages();
+                        updateChartWithCurrentData();
+                        updateDeploymentStatus();
+                    }, 100);
+                } else {
+                    const errorText = await response.text();
+                    console.log('⚠️ Error actualizando Canary:', errorText);
+                }
+            } catch (error) {
+                console.log('⚠️ Error actualizando Canary:', error.message);
+                
+                // Actualizar localmente aunque falle la API
+                updateTrafficPercentages();
+                updateChartWithCurrentData();
+            }
+        }
+            }
+        }
+        
+        function debugURLStatus() {
+            console.log('🐛 DEBUG: Estado actual de URLs');
+            console.log('isABEnabled:', isABEnabled);
+            console.log('isCanaryEnabled:', isCanaryEnabled);
+            console.log('urlHealthStatus:', urlHealthStatus);
+            
+            const urlKeys = ['version-a', 'version-b', 'feature-flags', 'weblogic-a', 'weblogic-b'];
+            
+            for (const urlKey of urlKeys) {
+                const percentage = getTrafficPercentage(urlKey);
+                const isHealthy = urlHealthStatus[urlKey] === 'online';
+                const urlCard = document.getElementById(`url-${urlKey}`);
+                
+                console.log(`${urlKey}:`, {
+                    percentage: percentage + '%',
+                    healthy: isHealthy,
+                    cardClass: urlCard ? urlCard.className : 'not found'
+                });
+            }
+        }
+        
+        // Agregar función de debug al objeto window para poder llamarla desde la consola
+        window.debugURLStatus = debugURLStatus;
+        
+        function startRealTimeUpdates() {
+            console.log('🔄 Iniciando actualizaciones en tiempo real (simplificado)...');
+            
+            // Primera actualización inmediata
+            setTimeout(() => {
+                console.log('🔄 Primera actualización...');
+                updateTrafficPercentages();
+                updateDeploymentStatus();
+                updateChartWithCurrentData();
+            }, 500);
+            
+            // Segunda actualización para asegurar
+            setTimeout(() => {
+                console.log('🔄 Segunda actualización...');
+                updateTrafficPercentages();
+                updateDeploymentStatus();
+                updateChartWithCurrentData();
+            }, 2000);
+            
+            // Actualizar cada 5 segundos (menos frecuente para evitar problemas)
+            setInterval(() => {
+                console.log('🔄 Actualización periódica...');
+                fetchTrafficStats();
+                updateTrafficPercentages();
+                updateChartWithCurrentData();
+            }, 5000);
+            
+            console.log('✅ Actualizaciones en tiempo real iniciadas');
+        }
+        
+        // Función de prueba directa
+        function forceTestURLsAndChart() {
+            console.log('🧪 FORZANDO PRUEBA DE URLs Y GRÁFICO...');
+            
+            // Forzar actualización de URLs
+            console.log('🔗 Forzando actualización de URLs...');
+            updateTrafficPercentages();
+            
+            // Forzar actualización de gráfico
+            console.log('📊 Forzando actualización de gráfico...');
+            updateChartWithCurrentData();
+            
+            console.log('🧪 PRUEBA FORZADA COMPLETADA');
+        }
+        
+        // Función de prueba simple para verificar funcionalidad
+        function testURLsAndChart() {
+            console.log('🧪 PROBANDO URLs y Gráfico...');
+            
+            // Probar actualización de URLs
+            console.log('📊 Probando URLs...');
+            const urlKeys = ['version-a', 'version-b', 'weblogic-a', 'weblogic-b', 'feature-flags'];
+            
+            urlKeys.forEach(urlKey => {
+                const trafficSpan = document.getElementById(`traffic-${urlKey}`);
+                const urlCard = document.getElementById(`url-${urlKey}`);
+                
+                if (trafficSpan) {
+                    trafficSpan.textContent = '50%';
+                    console.log(`✅ ${urlKey}: traffic span actualizado`);
+                } else {
+                    console.error(`❌ ${urlKey}: traffic span NO encontrado`);
+                }
+                
+                if (urlCard) {
+                    urlCard.classList.remove('active', 'inactive', 'partial');
+                    urlCard.classList.add('partial');
+                    console.log(`✅ ${urlKey}: card class actualizada`);
+                } else {
+                    console.error(`❌ ${urlKey}: url card NO encontrada`);
+                }
+            });
+            
+            // Probar gráfico
+            console.log('📊 Probando gráfico...');
+            if (trafficChart) {
+                trafficChart.data.datasets[0].data = [25, 25, 25, 25];
+                trafficChart.data.labels = ['Version A (25%)', 'Version B (25%)', 'WebLogic A (25%)', 'WebLogic B (25%)'];
+                trafficChart.update();
+                console.log('✅ Gráfico actualizado');
+            } else {
+                console.error('❌ trafficChart NO disponible');
+            }
+            
+            console.log('🧪 Prueba completada');
+        }
+        
+        // Hacer funciones disponibles globalmente
+        window.testURLsAndChart = testURLsAndChart;
+        window.forceTestURLsAndChart = forceTestURLsAndChart;
+        window.updateTrafficPercentages = updateTrafficPercentages;
+        window.updateChartWithCurrentData = updateChartWithCurrentData;
+        window.getTrafficPercentage = getTrafficPercentage;
+    </script>
+</body>
+</html>

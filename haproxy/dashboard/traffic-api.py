@@ -273,8 +273,8 @@ def serve_static(filename):
 
 if __name__ == '__main__':
     print("🚀 Iniciando Dashboard de Tráfico WebLogic...")
-    print("📊 Dashboard disponible en: http://localhost:8082")
-    print("📡 API disponible en: http://localhost:8082/api/stats")
+    print("📊 Dashboard disponible en: http://localhost:8084")
+    print("📡 API disponible en: http://localhost:8084/api/stats")
     print("🔧 Endpoints: /api/ab/enable, /api/canary/enable, /api/stats")
     print("📈 Simulación de tráfico: ACTIVA")
-    app.run(host='0.0.0.0', port=8082, debug=False)
+    app.run(host='0.0.0.0', port=8084, debug=False)
