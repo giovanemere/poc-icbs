@@ -1,115 +1,56 @@
-# Archivos comprimidos
-*.tar
-*.tar.gz
-*.rar
-*.7z
-
-# Archivos WAR generados
-
-# Directorios de compilación
+# Build artifacts
+*.war
+*.jar
+*.class
 target/
-out/
-bin/
-tmp/
+build/
 
-# Archivos de configuración de IDE
-.idea/
-.vscode/
-*.iml
-*.ipr
-*.iws
-.classpath
-.project
-.settings/
-nbproject/
+# Deployment directories
+autodeploy/
+deploy/*.war
 
-# Archivos de logs
-*.log
-logs/
-log/
-
-# Archivos temporales
-*.tmp
-*.bak
-*.swp
-*~.nib
-*.DS_Store
-Thumbs.db
-
-# Directorios específicos del proyecto
-
-# Archivos de configuración local
-
-# Archivos de dependencias
-node_modules/
-bower_components/
-
-# Archivos de Oracle WebLogic
-*.dat
-*.lok
-*.wlsdomain
-*.wlsdomaintemplate
-*.wlsserver
-*.wlsconfig
-
-# Archivos de certificados y claves
-*.pem
-*.key
-*.crt
-*.cer
-*.der
-*.p12
-*.pfx
-*.jks
-*.keystore
-*.truststore
-
-# Archivos de Maven
-.mvn/
-mvnw
-mvnw.cmd
-.flattened-pom.xml
-
-# Archivos de Gradle
-.gradle/
-gradle/
-gradlew
-gradlew.bat
-
-# Archivos de Docker
-.dockerignore
-
-# Archivos de referencia y documentación
-# Archivos específicos de WebLogic
-wlsdeploy/
-wlst/
-wlsadmin/
-
-# MkDocs
-site/
-mkdocs-env/
-
-# Python
+# Python virtual environments
+haproxy-api-env/
+venv/
+env/
 __pycache__/
 *.pyc
 *.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.mypy_cache
-.pytest_cache
-.hypothesis
 
 # Backup files
-backup/
+backups/
+*.backup
+*.bak
+*.backup.*
+
+# Log files
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files with sensitive data
+.env.local
+.env.production
+.env.*.local
+
+# Docker volumes and data
+data/
+volumes/
+
+# Oracle installer files (too large for git)
+docker/weblogic/installers/*.zip
+oracle/installers/*.zip
+
+# Process ID files
+*.pid
