@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎛️ Panel de Administración HAProxy</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { 
+            text-align: center; 
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .panel-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+            transition: transform 0.3s ease;
+        }
+        .panel-card:hover {
+            transform: translateY(-5px);
+        }
+        .panel-title {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+        .panel-link {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px 0;
+            transition: background 0.3s ease;
+        }
+        .panel-link:hover {
+            background: #45a049;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background: #4CAF50; }
+        .status-offline { background: #f44336; }
+        .info-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .quick-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .quick-link {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: white;
+            font-size: 0.9em;
+            transition: background 0.3s ease;
+        }
+        .quick-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎛️ Panel de Administración HAProxy</h1>
+        
+        <div class="info-section">
+            <h3>📊 Estado del Sistema</h3>
+            <p><span class="status-indicator status-online"></span>HAProxy está funcionando correctamente</p>
+            <p><span class="status-indicator status-online"></span>Panel de administración activo</p>
+            <p><strong>Puerto:</strong> 8092 | <strong>Servicio:</strong> HAProxy Admin Panel</p>
+        </div>
+
+        <div class="panel-grid">
+            <div class="panel-card">
+                <div class="panel-title">🎛️ Panel Funcional</div>
+                <p>Panel de administración completo con todas las funcionalidades de HAProxy.</p>
+                <a href="/index-functional.html" class="panel-link">Acceder al Panel Funcional</a>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title">📈 Estadísticas HAProxy</div>
+                <p>Estadísticas en tiempo real de HAProxy con métricas detalladas.</p>
+                <a href="http://localhost:8404/stats" class="panel-link" target="_blank">Ver Estadísticas</a>
+                <p><small>Usuario: admin | Contraseña: admin123</small></p>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title">🌐 Frontend Principal</div>
+                <p>Acceso directo al frontend principal del sistema WebLogic.</p>
+                <a href="http://localhost:8100/" class="panel-link" target="_blank">Ir al Frontend</a>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title">🎛️ Dashboard Unificado</div>
+                <p>Dashboard principal con control completo del sistema.</p>
+                <a href="http://localhost:8085/unified-dashboard-fixed.html" class="panel-link" target="_blank">Dashboard Principal</a>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>🔗 Enlaces Rápidos</h3>
+            <div class="quick-links">
+                <a href="/index-functional.html" class="quick-link">🎛️ Panel Funcional</a>
+                <a href="http://localhost:8404/stats" class="quick-link" target="_blank">📈 Stats HAProxy</a>
+                <a href="http://localhost:8100/" class="quick-link" target="_blank">🌐 Frontend</a>
+                <a href="http://localhost:8085/unified-dashboard-fixed.html" class="quick-link" target="_blank">🎛️ Dashboard</a>
+                <a href="http://localhost:8084/" class="quick-link" target="_blank">📊 Tráfico</a>
+                <a href="http://localhost:7001/console" class="quick-link" target="_blank">🔧 WebLogic A</a>
+                <a href="http://localhost:7002/console" class="quick-link" target="_blank">🔧 WebLogic B</a>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h3>ℹ️ Información del Sistema</h3>
+            <p><strong>Versión HAProxy:</strong> 2.6</p>
+            <p><strong>Modo:</strong> Load Balancer con A/B Testing y Canary Deployment</p>
+            <p><strong>Backends:</strong> WebLogic A (7001), WebLogic B (7002)</p>
+            <p><strong>Funcionalidades:</strong> Testing A/B, Canary Deployment, Feature Flags</p>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px; opacity: 0.8;">
+            <p>🎛️ Panel de Administración HAProxy - Sistema WebLogic</p>
+            <p>Puerto 8092 | Modo Oscuro Disponible</p>
+        </div>
+    </div>
+
+    <script>
+        // Verificar estado de servicios
+        function checkServiceStatus() {
+            const services = [
+                { url: 'http://localhost:8404/stats', name: 'HAProxy Stats' },
+                { url: 'http://localhost:8100/', name: 'Frontend Principal' },
+                { url: 'http://localhost:8085/', name: 'Dashboard Unificado' }
+            ];
+
+            services.forEach(service => {
+                fetch(service.url, { mode: 'no-cors' })
+                    .then(() => console.log(`✅ ${service.name} está disponible`))
+                    .catch(() => console.log(`❌ ${service.name} no está disponible`));
+            });
+        }
+
+        // Verificar servicios al cargar la página
+        document.addEventListener('DOMContentLoaded', checkServiceStatus);
+    </script>
+</body>
+</html>

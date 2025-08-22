@@ -1,7 +1,7 @@
 version: '3.8'
 
 # =============================================================================
-# Docker Compose Actualizado - Sin IPs Quemadas
+# Docker Compose Completo - Con Dashboards Integrados
 # Proyecto: Oracle WebLogic con Testing A/B, Canary Deployment y Feature Flags
 # =============================================================================
 
@@ -167,6 +167,98 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  # =============================================================================
+  # Dashboard Unificado (Puerto 8085)
+  # =============================================================================
+  unified-dashboard:
+    image: nginx:alpine
+    container_name: unified-dashboard
+    hostname: unified-dashboard
+    ports:
+      - "8085:80"
+    volumes:
+      - ../unified-dashboard-fixed.html:/usr/share/nginx/html/index.html:ro
+      - ../unified-dashboard-fixed.html:/usr/share/nginx/html/unified-dashboard-fixed.html:ro
+      - ../unified-dashboard.html:/usr/share/nginx/html/unified-dashboard.html:ro
+    networks:
+      weblogic-network:
+        aliases:
+          - unified-dashboard
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # Dashboard de Tráfico WebLogic (Puerto 8084)
+  # =============================================================================
+  traffic-dashboard:
+    image: python:3.9-alpine
+    container_name: traffic-dashboard
+    hostname: traffic-dashboard
+    ports:
+      - "8084:8084"
+    working_dir: /app
+    command: sh -c "pip install flask flask-cors requests && python real-traffic-api.py"
+    volumes:
+      - ../haproxy/dashboard:/app:rw
+    networks:
+      weblogic-network:
+        aliases:
+          - traffic-dashboard
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8084/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # Panel de Administración HAProxy (Puerto 8092)
+  # =============================================================================
+  haproxy-admin-panel:
+    image: nginx:alpine
+    container_name: haproxy-admin-panel
+    hostname: haproxy-admin-panel
+    ports:
+      - "8092:80"
+    volumes:
+      - ../haproxy/admin-panel:/usr/share/nginx/html:ro
+    networks:
+      weblogic-network:
+        aliases:
+          - haproxy-admin-panel
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =============================================================================
+  # API de Administración (Puerto 8093)
+  # =============================================================================
+  admin-api:
+    image: nginx:alpine
+    container_name: admin-api
+    hostname: admin-api
+    ports:
+      - "8093:80"
+    volumes:
+      - ../admin-api:/usr/share/nginx/html:ro
+    networks:
+      weblogic-network:
+        aliases:
+          - admin-api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 # =============================================================================
 # Redes

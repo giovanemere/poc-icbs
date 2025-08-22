@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📡 API de Administración</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { text-align: center; margin-bottom: 30px; }
+        .api-endpoint {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+        .endpoint-url {
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 10px;
+            border-radius: 4px;
+            display: inline-block;
+            margin: 5px 0;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 API de Administración</h1>
+        
+        <div class="api-endpoint">
+            <h3>🔍 Health Check</h3>
+            <div class="endpoint-url">
+                <a href="/api/health" target="_blank">GET /api/health</a>
+            </div>
+            <p>Verifica el estado de salud del servicio de administración.</p>
+        </div>
+        
+        <div class="api-endpoint">
+            <h3>📊 Status</h3>
+            <div class="endpoint-url">
+                <a href="/api/status" target="_blank">GET /api/status</a>
+            </div>
+            <p>Obtiene el estado de todos los servicios del sistema.</p>
+        </div>
+        
+        <div style="text-align: center; margin-top: 30px;">
+            <p><strong>Puerto:</strong> 8093</p>
+            <p><strong>Servicio:</strong> API de Administración WebLogic</p>
+        </div>
+    </div>
+</body>
+</html>

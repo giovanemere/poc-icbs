@@ -1,0 +1,1 @@
+{"status": "running", "services": ["haproxy", "weblogic-a", "weblogic-b", "oracle-db"]}

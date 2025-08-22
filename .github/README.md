@@ -1,424 +1,290 @@
-# 🚀 GitHub Actions - Oracle WebLogic Docker Platform
+# Docker para Oracle WebLogic con Testing A/B, Canary Deployment y Feature Flags
 
-## 📋 Workflow Overview
+Este proyecto proporciona un entorno Docker para Oracle WebLogic con soporte para estrategias avanzadas de despliegue como Testing A/B, Canary Deployment y Feature Flags utilizando HAProxy. Incluye modo oscuro en las interfaces de usuario, herramientas para build local y sistema unificado de gestión.
 
-Este repositorio incluye un workflow completo para la plataforma Oracle WebLogic con Docker, incluyendo:
+## 🚀 Inicio Rápido
 
-### 🔄 **Pipeline Stages**
+### **Comando Principal (Recomendado)**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
+```
 
-1. **🔍 Validate Configuration**
-   - Validación de Docker Compose files
-   - Verificación de archivos de entorno
-   - Validación de configuración HAProxy
-   - Verificación de configuración MkDocs
+### **Parar Todo el Sistema**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./stop.sh
+```
 
-2. **🏗️ Build Docker Images**
-   - **WebLogic Feature Flags**: Servidor de aplicaciones
-   - **HAProxy Advanced**: Load balancer y proxy
-   - **MkDocs Server**: Servidor de documentación
-   - **Oracle Express DB**: Base de datos
+### **Verificar URLs del Sistema**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./verify-updated-urls.sh
+```
 
-3. **🧪 Integration Testing**
-   - Tests de integración completos
-   - Verificación de conectividad entre servicios
-   - Health checks automáticos
-   - Validación de endpoints
+## 🎯 **URLs Principales del Sistema**
 
-4. **🐤 Canary Deployment**
-   - Deploy gradual con monitoreo
-   - Análisis de métricas de infraestructura
-   - Rollback automático si es necesario
+### **🎛️ DASHBOARD PRINCIPAL:**
+```
+🎛️ http://localhost:8085/unified-dashboard-fixed.html  ⭐ Principal
+📊 http://localhost:8084/                              Dashboard de Tráfico
+```
 
-5. **🚩 Feature Flag Management**
-   - Gestión de feature flags en WebLogic
-   - Configuración dinámica de features
-   - Monitoreo de uso de features
+### **🌐 URLs del Sistema Completo**
 
-6. **🚀 Production Deployment**
-   - Deploy coordinado de todos los servicios
-   - Configuración de monitoreo
-   - Setup de alertas
+#### **🎛️ Dashboard Unificado (RECOMENDADO):**
+- `http://localhost:8085/unified-dashboard-fixed.html` ⭐ **Dashboard Principal**
+- 📊 Control A/B Testing + Canary + URLs Activas + Métricas
 
-## ⚙️ **Configuración Requerida**
+#### **📊 Dashboard de Tráfico WebLogic:**
+- `http://localhost:8084/` - 📊 Dashboard de Tráfico
+- `http://localhost:8084/api/stats` - 📊 API de Estadísticas
+- `http://localhost:8084/api/health` - 🔍 Health Check
+- `http://localhost:8084/api/ab/enable` - 🎯 A/B Testing API
+- `http://localhost:8084/api/canary/enable` - 🚀 Canary Deployment API
+- `http://localhost:8084/api/reset` - 🔄 Reset Stats API
 
-### Secrets de GitHub
+#### **🎛️ Panel de Administración HAProxy:**
+- `http://localhost:8092/index-functional.html`
+- `http://localhost:8092/`
+
+#### **📡 API de Administración:**
+- `http://localhost:8093/api/health`
+- `http://localhost:8093/api/status`
+
+#### **📈 Estadísticas HAProxy:**
+- `http://localhost:8404/stats` (admin/admin123)
+
+#### **🌐 Frontend Principal:**
+- `http://localhost:8100/`
+
+#### **🚀 Aplicaciones de Prueba:**
+- `http://localhost:8100/version-a/`
+- `http://localhost:8100/version-b/`
+- `http://localhost:8100/feature-flags/`
+
+#### **🔧 Consolas WebLogic:**
+- `http://localhost:7001/console` (weblogic/welcome1)
+- `http://localhost:7002/console` (weblogic/welcome1)
+
+## 🔧 Comandos de Desarrollo
+
+### **Build WAR Files**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./scripts/build/build-wars.sh
+```
+
+### **Build Docker Images**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./build-latest.sh
+```
+
+### **Subir MkDocs para Desarrollo**
+```bash
+# Opción 1: Navegar al directorio del proyecto de documentación
+cd /path/to/mkdocs-project
+
+# Iniciar servidor de desarrollo MkDocs
+mkdocs serve --dev-addr=0.0.0.0:8000
+
+# Opción 2: Si tienes un script específico
+./start-mkdocs-dev.sh
+
+# Opción 3: Con Docker (si tienes imagen de MkDocs)
+docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
+
+# Opción 4: MkDocs con auto-reload
+mkdocs serve --dev-addr=0.0.0.0:8000 --livereload
+```
+
+**URLs de MkDocs:**
+- **Documentación Local**: `http://localhost:8000`
+- **Auto-reload**: Se actualiza automáticamente al guardar cambios
+- **Puerto por defecto**: 8000 (evita conflictos con WebLogic)
+
+## 📋 Scripts Disponibles
+
+| Script | Descripción | Uso |
+|--------|-------------|-----|
+| **`./start.sh`** | ⭐ **PRINCIPAL** - Inicia todo el sistema | Uso diario |
+| **`./stop.sh`** | Para todo el sistema completamente | Cuando termines |
+| **`./verify-updated-urls.sh`** | Verifica todas las URLs del sistema | Verificación |
+| `./start-unified-system.sh` | Script completo con logs detallados | Debugging |
+| `./check-images.sh` | Verifica imágenes Docker disponibles | Troubleshooting |
+| `./scripts/build/build-wars.sh` | Construye archivos WAR | Desarrollo |
+| `./build-latest.sh` | Construye imágenes Docker | Desarrollo |
+
+## 🎯 Flujo de Trabajo Recomendado
+
+### **1. Desarrollo Completo**
+```bash
+# 1. Construir WAR files
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./scripts/build/build-wars.sh
+
+# 2. Construir imágenes Docker
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./build-latest.sh
+
+# 3. Iniciar todo el sistema
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
+```
+
+### **2. Uso Diario**
+```bash
+# Iniciar sistema
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
+
+# Verificar que todo funciona
+# - Abrir: http://localhost:8085/unified-dashboard-fixed.html
+# - Probar: http://localhost:8100/
+
+# Parar sistema al final del día
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./stop.sh
+```
+
+### **3. Desarrollo con MkDocs**
+```bash
+# En terminal separada para documentación
+cd /path/to/mkdocs-project
+mkdocs serve --dev-addr=0.0.0.0:8000
+
+# Acceder a documentación en: http://localhost:8000
+```
+
+## 🚨 Solución de Problemas Comunes
+
+### **Si algo no funciona:**
+
+1. **Parar todo y reiniciar:**
+   ```bash
+   ./stop.sh
+   ./start.sh
+   ```
+
+2. **Ver logs detallados:**
+   ```bash
+   ./start-unified-system.sh
+   ```
+
+3. **Verificar imágenes:**
+   ```bash
+   ./check-images.sh
+   ```
+
+4. **Verificar URLs:**
+   ```bash
+   ./verify-updated-urls.sh
+   ```
+
+### **URLs de Respaldo (Siempre Funcionan)**
+Si HAProxy falla, estos dashboards independientes siguen funcionando:
+- `http://localhost:8085/unified-dashboard-fixed.html`
+- `http://localhost:8084/`
+- `http://localhost:8092/index-functional.html`
+- `http://localhost:8093/api/health`
+
+### **URLs Prioritarias para Acceso Rápido**
+
+1. **🎛️ Dashboard Principal**: `http://localhost:8085/unified-dashboard-fixed.html` ⭐
+2. **📊 Dashboard de Tráfico**: `http://localhost:8084/`
+3. **🌐 Frontend Principal**: `http://localhost:8100/`
+
+## 💡 Consejos y Mejores Prácticas
+
+- **Los dashboards independientes** (8084, 8085, 8092, 8093) son más confiables que las URLs que dependen de HAProxy
+- **El Frontend Principal** (8100) depende de que HAProxy esté funcionando correctamente
+- **Usa el Dashboard de Tráfico** (8084) para A/B Testing y Canary Deployment
+- **El Dashboard Unificado** (8085) es el más completo para monitoreo general
+- **Construye las imágenes localmente** para mejor rendimiento y control de versiones
+
+## 🎮 Testing A/B, Canary Deployment y Feature Flags
+
+### 1. Testing A/B
+- Accede al Dashboard de Tráfico: `http://localhost:8084`
+- Configura porcentajes de tráfico entre versiones A y B
+- Monitorea resultados en tiempo real
+
+### 2. Canary Deployment
+- Usa el Dashboard de Tráfico para configurar despliegues graduales
+- Inicia con 5% de tráfico, aumenta gradualmente
+- Monitorea métricas antes de aumentar el porcentaje
+
+### 3. Feature Flags
+- Accede a: `http://localhost:8100/feature-flags/`
+- Activa/desactiva funcionalidades sin redesplegar
+- Controla el rollout de nuevas características
+
+## 🔧 Comandos Útiles
+
+### **Gestión de Contenedores**
+```bash
+# Ver logs en tiempo real
+docker-compose -f config/docker-compose.yml logs -f
+
+# Ver estado de contenedores
+docker-compose -f config/docker-compose.yml ps
+
+# Reiniciar solo un servicio
+docker-compose -f config/docker-compose.yml restart haproxy
+```
+
+### **Verificación y Debugging**
+```bash
+# Verificar imágenes disponibles
+./check-images.sh
+
+# Verificar configuración de URLs
+./verify-updated-urls.sh
+
+# Inicio con logs detallados
+./start-unified-system.sh
+```
+
+## Arquitectura del Sistema
+
+```
+                                  ┌─────────────┐
+                                  │   Cliente   │
+                                  └──────┬──────┘
+                                         │
+                                         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                            HAProxy                                  │
+│                         (Puerto 8100)                              │
+└───┬─────────────────────────────────┬───────────────────────────┬───┘
+    │                                 │                           │
+    ▼                                 ▼                           ▼
+┌─────────────┐                 ┌─────────────┐             ┌─────────────┐
+│ WebLogic A  │                 │ WebLogic B  │             │ Dashboards  │
+│  (7001)     │                 │  (7002)     │             │Independientes│
+└──────┬──────┘                 └──────┬──────┘             └─────────────┘
+       │                               │
+       └───────────────┬───────────────┘
+                       │
+                       ▼
+               ┌───────────────┐
+               │  Oracle DB    │
+               │ (1521/5500)   │
+               └───────────────┘
+```
+
+## ✨ ¡Listo para Usar!
+
+Ejecuta el comando principal para comenzar:
 
 ```bash
-# Docker Hub
-DOCKERHUB_USERNAME=your-dockerhub-username
-DOCKERHUB_TOKEN=your-dockerhub-token
-
-# Oracle Database
-ORACLE_PASSWORD=your-oracle-password
-ORACLE_SID=XE
-
-# WebLogic
-WEBLOGIC_PASSWORD=your-weblogic-password
-WEBLOGIC_DOMAIN=base_domain
-
-# Monitoring
-MONITORING_WEBHOOK=your-monitoring-webhook
-SLACK_WEBHOOK=your-slack-webhook
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
 ```
 
-### Environment Variables
-
-```bash
-# Oracle Configuration
-ORACLE_PASSWORD=Oracle123
-ORACLE_SID=XE
-ORACLE_PDB=XEPDB1
-
-# WebLogic Configuration
-WEBLOGIC_PASSWORD=Welcome123
-WEBLOGIC_DOMAIN=base_domain
-WEBLOGIC_ADMIN_SERVER=AdminServer
-
-# HAProxy Configuration
-HAPROXY_STATS_PASSWORD=admin123
-HAPROXY_STATS_USER=admin
-
-# Feature Flags
-ENABLE_CANARY_DEPLOYMENT=true
-ENABLE_ADVANCED_MONITORING=true
-ENABLE_AUTO_SCALING=false
-```
-
-## 🏗️ **Arquitectura de Servicios**
-
-### **Servicios Principales**
-
-#### **1. WebLogic Feature Flags**
-```yaml
-Service: weblogic-feature-flags
-Port: 7001 (Admin), 8001 (Managed)
-Image: edissonz8809/weblogic-feature-flags:v1.1.0
-Features:
-  - Dynamic feature flag management
-  - A/B testing capabilities
-  - Real-time configuration updates
-```
-
-#### **2. HAProxy Advanced**
-```yaml
-Service: haproxy-advanced
-Port: 80 (HTTP), 443 (HTTPS), 8404 (Stats)
-Image: edissonz8809/haproxy-advanced:v1.1.0
-Features:
-  - Load balancing
-  - SSL termination
-  - Health checks
-  - Statistics dashboard
-```
-
-#### **3. MkDocs Server**
-```yaml
-Service: mkdocs-server
-Port: 8000
-Image: edissonz8809/mkdocs-server:v1.1.0
-Features:
-  - Live documentation
-  - Auto-reload on changes
-  - Search functionality
-```
-
-#### **4. Oracle Express DB**
-```yaml
-Service: oracle-express-db
-Port: 1521
-Image: edissonz8809/oracle-express-db:v1.1.0
-Features:
-  - Persistent data storage
-  - Automatic backup
-  - Performance monitoring
-```
-
-## 🏃‍♂️ **Cómo Usar**
-
-### **Comandos Locales**
-```bash
-# Validar configuración
-docker-compose config
-
-# Iniciar servicios completos
-docker-compose up -d
-
-# Usar imágenes de Docker Hub
-docker-compose -f docker-compose.dockerhub.yml up -d
-
-# Verificar estado de servicios
-docker-compose ps
-
-# Ver logs
-docker-compose logs -f [service-name]
-
-# Parar servicios
-docker-compose down
-```
-
-### **Scripts de Gestión**
-```bash
-# Inicio rápido
-./start-all.sh
-
-# Gestión de servicios
-./manage-services.sh status
-./manage-services.sh restart weblogic
-
-# Validación completa
-./scripts/validation/validate-complete-system.sh
-
-# Deploy de WAR files
-./deploy-war.sh your-app.war
-```
-
-## 🧪 **Testing y Validación**
-
-### **Integration Tests**
-```bash
-# Test HAProxy
-curl -f http://localhost:80/health
-
-# Test MkDocs
-curl -f http://localhost:8000
-
-# Test WebLogic Console
-curl -f http://localhost:7001/console
-
-# Test Feature Flags
-curl -f http://localhost:80/feature-flags
-```
-
-### **Health Checks**
-```bash
-# Verificar todos los servicios
-./scripts/validation/check-urls.sh
-
-# Monitoreo continuo
-./scripts/monitoring/start-url-monitoring.sh
-
-# Validación de performance
-./scripts/validation/test-performance.sh
-```
-
-## 🚩 **Feature Flag Management**
-
-### **Available Features**
-```yaml
-weblogic_features:
-  - canary_deployment: true/false
-  - advanced_monitoring: true/false
-  - auto_scaling: true/false
-  - ssl_termination: true/false
-  - database_clustering: true/false
-
-haproxy_features:
-  - sticky_sessions: true/false
-  - rate_limiting: true/false
-  - geo_blocking: true/false
-  - compression: true/false
-
-monitoring_features:
-  - real_time_alerts: true/false
-  - performance_analytics: true/false
-  - log_aggregation: true/false
-```
-
-### **Feature Management Commands**
-```bash
-# Listar features disponibles
-./scripts/feature-flags/list-features.sh
-
-# Habilitar feature
-./scripts/feature-flags/enable-feature.sh canary_deployment
-
-# Deshabilitar feature
-./scripts/feature-flags/disable-feature.sh auto_scaling
-
-# Validar configuración de features
-./scripts/feature-flags/validate-features.sh
-```
-
-## 📊 **Monitoreo y Métricas**
-
-### **Métricas Recopiladas**
-
-#### **WebLogic Metrics**
-- 🔄 **Thread Pool Usage**: Uso del pool de threads
-- 💾 **Memory Consumption**: Consumo de memoria JVM
-- 📊 **Request Throughput**: Throughput de requests
-- ⏱️ **Response Time**: Tiempo de respuesta promedio
-
-#### **HAProxy Metrics**
-- 🌐 **Connection Count**: Número de conexiones activas
-- ⚖️ **Load Distribution**: Distribución de carga
-- 🔍 **Health Check Status**: Estado de health checks
-- 📈 **Traffic Volume**: Volumen de tráfico
-
-#### **Oracle DB Metrics**
-- 💾 **Database Size**: Tamaño de base de datos
-- 🔄 **Connection Pool**: Estado del pool de conexiones
-- 📊 **Query Performance**: Performance de queries
-- 💿 **Disk Usage**: Uso de disco
-
-#### **System Metrics**
-- 🖥️ **CPU Usage**: Uso de CPU por servicio
-- 💾 **Memory Usage**: Uso de memoria por servicio
-- 💿 **Disk I/O**: I/O de disco
-- 🌐 **Network Traffic**: Tráfico de red
-
-### **Dashboards Disponibles**
-- **HAProxy Stats**: http://localhost:8404/stats
-- **WebLogic Console**: http://localhost:7001/console
-- **MkDocs Documentation**: http://localhost:8000
-- **System Monitoring**: Custom dashboard
-
-## 🔧 **Personalización**
-
-### **Añadir Nuevo Servicio**
-```yaml
-# docker-compose.yml
-new-service:
-  build: ./applications/new-service
-  ports:
-    - "9000:9000"
-  depends_on:
-    - oracle-db
-  environment:
-    - SERVICE_ENV=production
-```
-
-### **Modificar Configuración HAProxy**
-```bash
-# Editar configuración
-vim haproxy/config/haproxy.cfg
-
-# Validar configuración
-docker run --rm -v $(pwd)/haproxy/config:/usr/local/etc/haproxy:ro \
-  haproxy:2.4 haproxy -c -f /usr/local/etc/haproxy/haproxy.cfg
-
-# Recargar configuración
-docker-compose restart haproxy
-```
-
-### **Custom WebLogic Domain**
-```bash
-# Crear nuevo dominio
-./scripts/weblogic/create-domain.sh my-custom-domain
-
-# Deploy aplicación
-./scripts/weblogic/deploy-app.sh my-app.war my-custom-domain
-```
-
-## 🆘 **Troubleshooting**
-
-### **Servicios No Inician**
-```bash
-# Verificar logs
-docker-compose logs weblogic-server
-
-# Verificar recursos
-docker stats
-
-# Limpiar y reiniciar
-docker-compose down -v
-docker system prune -f
-docker-compose up -d
-```
-
-### **Problemas de Conectividad**
-```bash
-# Verificar red Docker
-docker network ls
-docker network inspect docker-for-oracle-weblogic_default
-
-# Test conectividad entre servicios
-docker-compose exec weblogic-server ping oracle-db
-docker-compose exec haproxy ping weblogic-server
-```
-
-### **Performance Issues**
-```bash
-# Análisis de performance
-./scripts/validation/test-performance.sh
-
-# Monitoreo de recursos
-./scripts/monitoring/system-monitor.sh
-
-# Optimización automática
-./scripts/optimization/auto-optimize.sh
-```
-
-### **Oracle Database Issues**
-```bash
-# Verificar estado de Oracle
-docker-compose exec oracle-db sqlplus sys/Oracle123@XE as sysdba
-
-# Backup de base de datos
-./scripts/database/backup-db.sh
-
-# Restaurar base de datos
-./scripts/database/restore-db.sh backup-file.dmp
-```
-
-## 🚀 **Deployment Strategies**
-
-### **Local Development**
-```bash
-# Desarrollo con hot-reload
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-```
-
-### **Staging Environment**
-```bash
-# Deploy a staging
-docker-compose -f docker-compose.yml -f docker-compose.staging.yml up -d
-```
-
-### **Production Deployment**
-```bash
-# Deploy a producción con imágenes de Docker Hub
-docker-compose -f docker-compose.dockerhub.yml up -d
-
-# Verificar deployment
-./scripts/validation/validate-production.sh
-```
-
-## 📊 **CI/CD Integration**
-
-### **GitHub Actions Triggers**
-- **Push to main**: Full deployment pipeline
-- **Push to develop**: Development environment deployment
-- **Pull Request**: Integration tests only
-- **Manual**: Custom deployment with parameters
-
-### **Deployment Environments**
-- **Development**: Auto-deploy from develop branch
-- **Staging**: Manual approval required
-- **Production**: Manual approval + additional validations
-
-## 📞 **Soporte y Documentación**
-
-### **Documentación Disponible**
-- **MkDocs Site**: http://localhost:8000
-- **Architecture Docs**: `docs/architecture/`
-- **Deployment Guides**: `docs/deployment/`
-- **Troubleshooting**: `docs/troubleshooting/`
-
-### **Logs y Debugging**
-```bash
-# Logs centralizados
-./scripts/monitoring/collect-logs.sh
-
-# Debug mode
-DEBUG=true docker-compose up -d
-
-# Análisis de logs
-./scripts/monitoring/analyze-logs.sh
-```
+Luego ve a: `http://localhost:8085/unified-dashboard-fixed.html` para acceder al dashboard principal.
 
 ---
 
-**🏗️ La plataforma Oracle WebLogic está lista para producción!** 
+## 📚 Documentación Adicional
 
-Todos los servicios están configurados, monitoreados y listos para escalar según tus necesidades.
+- [README Principal](../README.md) - Documentación completa del proyecto
+- [Instrucciones Unificadas](../INSTRUCCIONES-UNIFICADAS.md) - Guía rápida de uso
+- [URLs Corregidas](../URLS-CORREGIDAS-FINAL.md) - Lista completa de URLs actualizadas
+
+## Licencias
+
+- Oracle WebLogic Server: Requiere aceptar los términos de licencia de Oracle
+- Oracle Database: Requiere aceptar los términos de licencia de Oracle
+- HAProxy: Licencia GPL v2
+- Scripts y configuraciones personalizadas: MIT License

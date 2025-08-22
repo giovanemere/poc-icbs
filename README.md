@@ -14,57 +14,56 @@ cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
 cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./stop.sh
 ```
 
-## 🔧 Comandos de Desarrollo
-
-### **Build WAR Files**
+### **Verificar URLs del Sistema**
 ```bash
-cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./scripts/build/build-wars.sh
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./verify-updated-urls.sh
 ```
 
-### **Build Docker Images**
-```bash
-cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./build-latest.sh
+## 🎯 **URLs Principales del Sistema**
+
+### **🎛️ DASHBOARD PRINCIPAL:**
+```
+🎛️ http://localhost:8085/unified-dashboard-fixed.html  ⭐ Principal
+📊 http://localhost:8084/                              Dashboard de Tráfico
 ```
 
-### **Subir Servicios**
-```bash
-cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./start.sh
-```
+### **🎛️ Dashboards Principales (Más Confiables)**
 
-### **Subir MkDocs para Desarrollo**
-```bash
-# Opción 1: Navegar al directorio del proyecto de documentación
-cd /path/to/mkdocs-project
+| Componente | URL | Descripción |
+|------------|-----|-------------|
+| **Dashboard Unificado** | `http://localhost:8085/unified-dashboard-fixed.html` | ⭐ **Dashboard Principal** |
+| **Dashboard de Tráfico** | `http://localhost:8084/` | Dashboard de tráfico y monitoreo |
+| **Panel HAProxy** | `http://localhost:8092/index-functional.html` | Panel de administración HAProxy |
+| **API Admin** | `http://localhost:8093/api/health` | API de administración |
 
-# Iniciar servidor de desarrollo MkDocs
-mkdocs serve --dev-addr=0.0.0.0:8000
+### **🌐 Frontend Principal (Puerto 8100)**
 
-# Opción 2: Si tienes un script específico
-./start-mkdocs-dev.sh
+| Aplicación | URL | Descripción |
+|------------|-----|-------------|
+| **Frontend Principal** | `http://localhost:8100/` | **Punto de entrada principal** ✅ |
+| **Version A** | `http://localhost:8100/version-a/` | Versión A para pruebas ✅ |
+| **Version B** | `http://localhost:8100/version-b/` | Versión B para pruebas ✅ |
+| **Feature Flags** | `http://localhost:8100/feature-flags/` | Aplicación de Feature Flags ✅ |
+| **FF4J Simple** | `http://localhost:8100/ff4j-simple/` | Aplicación FF4J ✅ |
 
-# Opción 3: Con Docker (si tienes imagen de MkDocs)
-docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
+### **📈 Administración y Monitoreo**
 
-# Opción 4: MkDocs con auto-reload
-mkdocs serve --dev-addr=0.0.0.0:8000 --livereload
-```
+| Componente | URL | Descripción |
+|------------|-----|-------------|
+| HAProxy Stats | `http://localhost:8404/stats` | Estadísticas de HAProxy (admin/admin123) |
+| WebLogic A Console | `http://localhost:7001/console` | Consola de administración WebLogic A |
+| WebLogic B Console | `http://localhost:7002/console` | Consola de administración WebLogic B |
+| Oracle Enterprise Manager | `http://localhost:5500/em` | Enterprise Manager de Oracle Database |
 
-**URLs de MkDocs:**
-- **Documentación Local**: `http://localhost:8000`
-- **Auto-reload**: Se actualiza automáticamente al guardar cambios
-- **Puerto por defecto**: 8000 (evita conflictos con WebLogic)
+### **📊 APIs del Dashboard de Tráfico**
 
-## 📋 Scripts Disponibles
-
-| Script | Descripción | Uso |
-|--------|-------------|-----|
-| **`./start.sh`** | ⭐ **PRINCIPAL** - Inicia todo el sistema | Uso diario |
-| **`./stop.sh`** | Para todo el sistema completamente | Cuando termines |
-| `./start-unified-system.sh` | Script completo con logs detallados | Debugging |
-| `./verify-urls.sh` | Verifica configuración de URLs | Verificación |
-| `./check-images.sh` | Verifica imágenes Docker disponibles | Troubleshooting |
-| `./scripts/build/build-wars.sh` | Construye archivos WAR | Desarrollo |
-| `./build-latest.sh` | Construye imágenes Docker | Desarrollo |
+| API | URL | Método | Descripción |
+|-----|-----|--------|-------------|
+| Health Check | `http://localhost:8084/api/health` | GET | Verificación de salud |
+| Estadísticas | `http://localhost:8084/api/stats` | GET | Estadísticas en tiempo real |
+| A/B Testing | `http://localhost:8084/api/ab/apply` | POST | API para aplicar A/B Testing |
+| Canary Deployment | `http://localhost:8084/api/canary/apply` | POST | API para aplicar Canary Deployment |
+| Reset Stats | `http://localhost:8084/api/reset` | POST | Reiniciar estadísticas |
 
 ## Arquitectura del Sistema
 
@@ -102,7 +101,7 @@ mkdocs serve --dev-addr=0.0.0.0:8000 --livereload
                └───────────────┘
 ```
 
-### Puertos Actualizados
+### Puertos del Sistema
 
 | Servicio | Puerto Interno | Puerto Externo | Descripción |
 |----------|----------------|----------------|-------------|
@@ -120,45 +119,55 @@ mkdocs serve --dev-addr=0.0.0.0:8000 --livereload
 | Panel HAProxy | - | 8092 | Panel de Administración |
 | API Admin | - | 8093 | API de Administración |
 
-## URLs y Endpoints del Sistema
+## 🔧 Comandos de Desarrollo
 
-### **🎛️ Dashboards Principales (Más Confiables)**
+### **Build WAR Files**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./scripts/build/build-wars.sh
+```
 
-| Componente | URL | Descripción |
-|------------|-----|-------------|
-| **Dashboard Unificado** | `http://localhost:8085/unified-dashboard-fixed.html` | ⭐ **Dashboard Principal** |
-| **Dashboard de Tráfico** | `http://localhost:8084/` | Dashboard de tráfico y monitoreo |
-| **Panel HAProxy** | `http://localhost:8092/` | Panel de administración HAProxy |
-| **API Admin** | `http://localhost:8093/api/health` | API de administración |
+### **Build Docker Images**
+```bash
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./build-latest.sh
+```
 
-### **🌐 Frontend Principal (Puerto 8100 - Actualizado)**
+### **Subir MkDocs para Desarrollo**
+```bash
+# Opción 1: Navegar al directorio del proyecto de documentación
+cd /path/to/mkdocs-project
 
-| Aplicación | URL | Descripción |
-|------------|-----|-------------|
-| **Frontend Principal** | `http://localhost:8100/` | **Punto de entrada principal** ✅ |
-| **Version A** | `http://localhost:8100/version-a/` | Versión A para pruebas ✅ |
-| **Version B** | `http://localhost:8100/version-b/` | Versión B para pruebas ✅ |
-| **Feature Flags** | `http://localhost:8100/feature-flags/` | Aplicación de Feature Flags ✅ |
-| **FF4J Simple** | `http://localhost:8100/ff4j-simple/` | Aplicación FF4J ✅ |
+# Iniciar servidor de desarrollo MkDocs
+mkdocs serve --dev-addr=0.0.0.0:8000
 
-### **📈 Administración y Monitoreo**
+# Opción 2: Si tienes un script específico
+./start-mkdocs-dev.sh
 
-| Componente | URL | Descripción |
-|------------|-----|-------------|
-| HAProxy Stats | `http://localhost:8404/stats` | Estadísticas de HAProxy (admin/admin123) |
-| WebLogic A Console | `http://localhost:7001/console` | Consola de administración WebLogic A |
-| WebLogic B Console | `http://localhost:7002/console` | Consola de administración WebLogic B |
-| Oracle Enterprise Manager | `http://localhost:5500/em` | Enterprise Manager de Oracle Database |
+# Opción 3: Con Docker (si tienes imagen de MkDocs)
+docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material
 
-### **📊 APIs del Dashboard de Tráfico**
+# Opción 4: MkDocs con auto-reload
+mkdocs serve --dev-addr=0.0.0.0:8000 --livereload
+```
 
-| API | URL | Descripción |
-|-----|-----|-------------|
-| Health Check | `http://localhost:8084/api/health` | Verificación de salud |
-| Estadísticas | `http://localhost:8084/api/stats` | Estadísticas en tiempo real |
-| A/B Testing | `http://localhost:8084/api/ab/enable` | API para A/B Testing |
-| Canary Deployment | `http://localhost:8084/api/canary/enable` | API para Canary Deployment |
-| Reset Stats | `http://localhost:8084/api/reset` | Reiniciar estadísticas |
+**URLs de MkDocs:**
+- **Documentación Local**: `http://localhost:8000`
+- **Auto-reload**: Se actualiza automáticamente al guardar cambios
+- **Puerto por defecto**: 8000 (evita conflictos con WebLogic)
+
+## 📋 Scripts Disponibles
+
+| Script | Descripción | Uso |
+|--------|-------------|-----|
+| **`./start.sh`** | ⭐ **PRINCIPAL** - Inicio inteligente (detecta estado y actúa) | Uso diario |
+| **`./smart-start.sh`** | 🧠 Inicio inteligente con detección automática | Uso avanzado |
+| **`./force-restart.sh`** | 🔄 Reinicio forzado completo (parada total + inicio limpio) | Cuando hay problemas |
+| **`./status.sh`** | 📊 Estado detallado de todos los servicios | Monitoreo |
+| **`./stop.sh`** | 🛑 Para todo el sistema completamente | Cuando termines |
+| **`./verify-updated-urls.sh`** | 🔍 Verifica todas las URLs del sistema | Verificación |
+| `./start-unified-system.sh` | Script completo con logs detallados | Debugging |
+| `./check-images.sh` | Verifica imágenes Docker disponibles | Troubleshooting |
+| `./scripts/build/build-wars.sh` | Construye archivos WAR | Desarrollo |
+| `./build-latest.sh` | Construye imágenes Docker | Desarrollo |
 
 ## 🎯 Flujo de Trabajo Recomendado
 
@@ -261,7 +270,7 @@ docker-compose -f config/docker-compose.yml logs -f haproxy
 ./check-images.sh
 
 # Verificar configuración de URLs
-./verify-urls.sh
+./verify-updated-urls.sh
 
 # Inicio con logs detallados
 ./start-unified-system.sh
@@ -299,14 +308,14 @@ docker system prune -f
 
 4. **Verificar URLs:**
    ```bash
-   ./verify-urls.sh
+   ./verify-updated-urls.sh
    ```
 
 ### **URLs de Respaldo (Siempre Funcionan)**
 Si HAProxy falla, estos dashboards independientes siguen funcionando:
 - `http://localhost:8085/unified-dashboard-fixed.html`
 - `http://localhost:8084/`
-- `http://localhost:8092/`
+- `http://localhost:8092/index-functional.html`
 - `http://localhost:8093/api/health`
 
 ### Aplicaciones no disponibles (Error 503)
@@ -405,7 +414,7 @@ docker-for-oracle-weblogic/
 ├── start.sh                   # ⭐ Script principal para iniciar todo
 ├── stop.sh                    # Script para parar todo
 ├── start-unified-system.sh    # Script unificado completo
-├── verify-urls.sh             # Verificar configuración de URLs
+├── verify-updated-urls.sh     # Verificar configuración de URLs
 ├── check-images.sh            # Verificar imágenes Docker
 ├── build-latest.sh            # Construir imágenes Docker
 └── README.md                  # Este archivo
