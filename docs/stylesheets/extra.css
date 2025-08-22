@@ -1,0 +1,234 @@
+/* CSS personalizado para la documentación WebLogic */
+
+/* Variables de colores */
+:root {
+  --primary-color: #1976d2;
+  --accent-color: #2196f3;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --info-color: #2196f3;
+}
+
+/* Mejoras para el tema */
+.md-header {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+}
+
+/* Estilos para admonitions personalizados */
+.md-typeset .admonition.url {
+  border-color: var(--info-color);
+}
+
+.md-typeset .admonition.url > .admonition-title {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-color: var(--info-color);
+}
+
+.md-typeset .admonition.url > .admonition-title::before {
+  background-color: var(--info-color);
+  mask-image: var(--md-admonition-icon--info);
+}
+
+/* Estilos para código */
+.md-typeset code {
+  background-color: rgba(33, 150, 243, 0.1);
+  color: var(--primary-color);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+}
+
+/* Estilos para tablas */
+.md-typeset table:not([class]) {
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.md-typeset table:not([class]) th {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+  color: white;
+  font-weight: 600;
+}
+
+.md-typeset table:not([class]) tr:nth-child(even) {
+  background-color: rgba(33, 150, 243, 0.05);
+}
+
+/* Estilos para enlaces */
+.md-typeset a {
+  color: var(--primary-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.3s ease;
+}
+
+.md-typeset a:hover {
+  border-bottom-color: var(--primary-color);
+}
+
+/* Estilos para botones de navegación */
+.md-nav__item--active > .md-nav__link {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Estilos para el contenido principal */
+.md-content {
+  max-width: none;
+}
+
+.md-main__inner {
+  margin-top: 0;
+}
+
+/* Estilos para bloques de código */
+.md-typeset .highlight {
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Estilos para listas */
+.md-typeset ul li {
+  margin-bottom: 0.5em;
+}
+
+/* Estilos para títulos */
+.md-typeset h1 {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 0.5em;
+}
+
+.md-typeset h2 {
+  color: var(--primary-color);
+  border-bottom: 1px solid rgba(33, 150, 243, 0.3);
+  padding-bottom: 0.3em;
+}
+
+/* Estilos para badges/etiquetas */
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
+  margin: 0.1em;
+}
+
+.badge-success {
+  color: white;
+  background-color: var(--success-color);
+}
+
+.badge-warning {
+  color: white;
+  background-color: var(--warning-color);
+}
+
+.badge-error {
+  color: white;
+  background-color: var(--error-color);
+}
+
+.badge-info {
+  color: white;
+  background-color: var(--info-color);
+}
+
+/* Estilos para URLs destacadas */
+.url-highlight {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.1) 0%, rgba(33, 150, 243, 0.05) 100%);
+  border-left: 4px solid var(--primary-color);
+  padding: 1em;
+  margin: 1em 0;
+  border-radius: 0 5px 5px 0;
+}
+
+.url-highlight code {
+  background-color: rgba(255, 255, 255, 0.8);
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Estilos para el footer */
+.md-footer {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+}
+
+/* Responsive */
+@media screen and (max-width: 76.1875em) {
+  .md-nav--primary .md-nav__title {
+    background: var(--primary-color);
+  }
+}
+
+/* Animaciones */
+.md-typeset .admonition {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.md-typeset .admonition:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para iconos en el contenido */
+.icon {
+  display: inline-block;
+  width: 1.2em;
+  height: 1.2em;
+  margin-right: 0.3em;
+  vertical-align: middle;
+}
+
+/* Estilos para grid de tarjetas */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.card {
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  background: rgba(33, 150, 243, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.card h3 {
+  color: var(--primary-color);
+  margin-top: 0;
+}
+
+/* Estilos para modo oscuro */
+[data-md-color-scheme="slate"] {
+  --primary-color: #64b5f6;
+  --accent-color: #90caf9;
+}
+
+[data-md-color-scheme="slate"] .md-typeset code {
+  background-color: rgba(100, 181, 246, 0.2);
+  color: var(--primary-color);
+}
+
+[data-md-color-scheme="slate"] .url-highlight {
+  background: rgba(100, 181, 246, 0.1);
+  border-left-color: var(--primary-color);
+}
+
+[data-md-color-scheme="slate"] .card {
+  background: rgba(100, 181, 246, 0.1);
+  border-color: rgba(100, 181, 246, 0.3);
+}

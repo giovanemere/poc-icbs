@@ -14,28 +14,26 @@ Poc Icbs es una aplicación Java simple con 10 archivos, implementando una arqui
 ```mermaid
 graph TB
     subgraph "Poc Icbs Java Application"
-        subgraph "🎯 Application Layer"
-            Main[🚀 Main Class<br/>Entry Point]
-            Logic[🧠 Business Logic<br/>Core Functionality]
-            Utils[🔧 Utilities<br/>Helper Classes]
+        subgraph "Application Layer"
+            Main[Main Class Entry Point]
+            Logic[Business Logic Core Functionality]
+            Utils[Utilities Helper Classes]
         end
         
-        subgraph "📁 Data & Resources"
-            Config[⚙️ Configuration<br/>Properties & Settings]
-            Files[📄 Data Files<br/>Input/Output]
+        subgraph "Data and Resources"
+            Config[Configuration Properties Settings]
+            Files[Data Files Input Output]
         end
         
-        subgraph "🔧 Infrastructure"
-            JVM[☕ Java Virtual Machine<br/>Runtime Environment]
-            Libs[📚 Libraries<br/>Dependencies]
+        subgraph "Infrastructure"
+            JVM[Java Virtual Machine Runtime Environment]
+            Libs[Libraries Dependencies]
         end
     end
     
-    %% External Systems
-    User[👤 User<br/>Command Line]
-    System[🖥️ File System<br/>OS Resources]
+    User[User Command Line]
+    System[File System OS Resources]
     
-    %% Connections
     User --> Main
     Main --> Logic
     Logic --> Utils
@@ -45,7 +43,6 @@ graph TB
     JVM --> System
     Logic --> Libs
     
-    %% Styling
     classDef app fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
     classDef data fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
     classDef infra fill:#fff3e0,stroke:#f57c00,stroke-width:2px
@@ -55,6 +52,49 @@ graph TB
     class Config,Files data
     class JVM,Libs infra
     class User,System external
+```
+
+## Diagrama Alternativo Simplificado
+
+```mermaid
+flowchart TD
+    User[Usuario] --> Main[Aplicacion Principal]
+    Main --> Logic[Logica de Negocio]
+    Logic --> Utils[Utilidades]
+    Logic --> Config[Configuracion]
+    Utils --> Files[Archivos]
+    Main --> JVM[Java VM]
+    JVM --> System[Sistema Operativo]
+```
+
+## Diagrama de Componentes
+
+```mermaid
+graph LR
+    subgraph "Java Application"
+        A[Main Class]
+        B[Business Logic]
+        C[Utilities]
+        D[Configuration]
+    end
+    
+    subgraph "Runtime"
+        E[JVM]
+        F[Libraries]
+    end
+    
+    subgraph "External"
+        G[File System]
+        H[User Input]
+    end
+    
+    A --> B
+    B --> C
+    B --> D
+    A --> E
+    E --> F
+    C --> G
+    H --> A
 ```
 
 ## 🔧 Características de la Aplicación Java

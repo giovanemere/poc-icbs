@@ -1,26 +1,160 @@
-site_name: 'poc-icbs Documentation'
-site_description: 'Sistema Core Banking Integrado - Oracle WebLogic'
+site_name: 'Docker WebLogic - Sistema Completo'
+site_description: 'Sistema Oracle WebLogic con Testing A/B, Canary Deployment y Feature Flags'
+site_author: 'Equipo de Desarrollo'
+site_url: 'http://localhost:8111'
 
+# Navegación
 nav:
-  - Home: index.md
-  - Integration: integration.md
-  - Dashboard: dashboard.md
-  - System: system.md
+  - 'Inicio': 'index.md'
+  - 'Guía de Inicio Rápido':
+    - 'Inicio Rápido': 'quick-start.md'
+    - 'Prerequisitos': 'prerequisites.md'
+    - 'URLs del Sistema': 'urls-sistema.md'
+  - 'Arquitectura':
+    - 'Arquitectura General': 'architecture.md'
+    - 'Diagramas de Arquitectura': 'arquitectura-diagrama.md'
+    - 'Arquitectura Mejorada': 'arquitectura-mejorada.md'
+    - 'Estructura del Proyecto': 'project-structure.md'
+  - 'Despliegue':
+    - 'Guía de Despliegue': 'deployment-guide.md'
+    - 'Docker Compose': 'DOCKER-COMPOSE-INTEGRATED.md'
+    - 'Redespliegue': 'redeployment-guide.md'
+  - 'HAProxy y Load Balancing':
+    - 'Guía HAProxy': 'haproxy-guide.md'
+    - 'Configuración Avanzada': 'haproxy-advanced-config.md'
+    - 'Dashboard y A/B Testing': 'haproxy-dashboard-and-ab-testing.md'
+  - 'Testing y Deployment':
+    - 'Canary Deployment': 'canary-flow.md'
+    - 'Feature Flags': 'feature-flags-deployment.md'
+  - 'Dashboards':
+    - 'Dashboard Principal': 'dashboard.md'
+  - 'Scripts y Herramientas':
+    - 'Scripts de Build': 'build-scripts.md'
+    - 'Scripts Inteligentes': 'scripts-inteligentes.md'
+  - 'APIs':
+    - 'APIs del Sistema': 'api.md'
+  - 'Desarrollo':
+    - 'Desarrollo': 'development.md'
+    - 'Integración': 'integration.md'
+    - 'Sistema': 'system.md'
+  - 'Troubleshooting':
+    - 'Solución de Problemas': 'troubleshooting.md'
+    - 'Prueba Mermaid': 'test-mermaid.md'
 
-plugins:
-  - techdocs-core
-  - search
-
+# Tema
 theme:
   name: material
+  language: es
   palette:
-    primary: blue
-    accent: blue
+    # Modo claro
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Cambiar a modo oscuro
+    # Modo oscuro
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Cambiar a modo claro
+  
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top
+    - search.highlight
+    - search.share
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+    - toc.integrate
 
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+# Plugins
+plugins:
+  - search:
+      lang: es
+  - techdocs-core
+
+# Extensiones de Markdown
 markdown_extensions:
   - admonition
-  - codehilite
-  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: true
+      title: "En esta página"
 
+# CSS y JavaScript adicional
+extra_css:
+  - stylesheets/extra.css
+
+extra_javascript:
+  - javascripts/extra.js
+  - javascripts/mathjax.js
+  - javascripts/mermaid-config.js
+  - https://cdn.jsdelivr.net/npm/mermaid@9.4.3/dist/mermaid.min.js
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+# Información adicional
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/giovanemere/poc-icbs
+      name: GitHub Repository
+    - icon: fontawesome/solid/globe
+      link: http://localhost:8085/unified-dashboard-fixed.html
+      name: Dashboard Principal
+    - icon: fontawesome/solid/chart-line
+      link: http://localhost:8084/
+      name: Dashboard de Tráfico
+
+# Configuración del repositorio
 repo_url: https://github.com/giovanemere/poc-icbs
+repo_name: poc-icbs
 edit_uri: edit/main/docs/
+
+# Copyright
+copyright: Copyright &copy; 2025 - Sistema WebLogic Docker

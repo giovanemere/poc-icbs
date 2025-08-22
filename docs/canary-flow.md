@@ -2,20 +2,20 @@
 
 ```mermaid
 flowchart TD
-    Start[Inicio] --> BuildImages[Construir Imágenes]
+    Start[Inicio] --> BuildImages[Construir Imagenes]
     BuildImages --> BuildWars[Construir WARs]
     BuildWars --> DeployWars[Desplegar WARs]
     DeployWars --> SetupCanary[Configurar Canary]
     
     SetupCanary --> CanaryTest{Pruebas OK?}
-    CanaryTest -->|No| AdjustTraffic[Ajustar Tráfico]
+    CanaryTest -->|No| AdjustTraffic[Ajustar Trafico]
     AdjustTraffic --> CanaryTest
     
-    CanaryTest -->|Sí| IncreaseTraffic[Aumentar Tráfico a Versión B]
+    CanaryTest -->|Si| IncreaseTraffic[Aumentar Trafico a Version B]
     IncreaseTraffic --> FullDeployment[Despliegue Completo]
     FullDeployment --> End[Fin]
     
-    subgraph "Construcción"
+    subgraph "Construccion"
         BuildImages
         BuildWars
     end
@@ -31,22 +31,41 @@ flowchart TD
         IncreaseTraffic
     end
     
-    subgraph "Scripts Utilizados"
+    classDef build fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef deploy fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef test fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef decision fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    
+    class BuildImages,BuildWars build
+    class DeployWars,SetupCanary deploy
+    class AdjustTraffic,IncreaseTraffic test
+    class CanaryTest decision
+```
+
+## Scripts Utilizados en el Flujo
+
+```mermaid
+graph LR
+    subgraph "Scripts de Construccion"
         Script1[build.sh]
         Script2[build-wars.sh]
+    end
+    
+    subgraph "Scripts de Despliegue"
         Script3[deploy-war.sh]
         Script4[setup-canary.sh]
+    end
+    
+    subgraph "Scripts de Control"
         Script5[test-canary.sh]
         Script6[canary-control.sh]
     end
     
-    BuildImages -.-> Script1
-    BuildWars -.-> Script2
-    DeployWars -.-> Script3
-    SetupCanary -.-> Script4
-    CanaryTest -.-> Script5
-    AdjustTraffic -.-> Script6
-    IncreaseTraffic -.-> Script6
+    Script1 --> Script2
+    Script2 --> Script3
+    Script3 --> Script4
+    Script4 --> Script5
+    Script5 --> Script6
 ```
 
 ## Descripción del Flujo de Despliegue Canary
