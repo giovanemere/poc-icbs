@@ -7,7 +7,7 @@ graph TD
         WebLogicContainer[Contenedor WebLogic]
     end
 
-    subgraph "Scripts de Construcción"
+    subgraph "Scripts de Construccion"
         BuildSh[build.sh]
         BuildWarsSh[build-wars.sh]
         BuildFeatureFlagsSh[build-feature-flags.sh]
@@ -34,13 +34,12 @@ graph TD
         WebLogicFeaturesBWar[weblogic-features-b.war]
     end
 
-    subgraph "Código Fuente"
+    subgraph "Codigo Fuente"
         FeatureFlagsProject[feature-flags]
         VersionAProject[version-a]
         VersionBProject[version-b]
     end
 
-    %% Relaciones de construcción
     BuildSh --> Docker
     BuildWarsSh --> WebLogicFeaturesAWar
     BuildWarsSh --> WebLogicFeaturesBWar
@@ -49,15 +48,30 @@ graph TD
     CreateSimpleWarsSh --> WebLogicFeaturesBWar
     CreateSimpleWarsSh --> FF4JSimpleWar
 
-    %% Relaciones de código fuente
     FeatureFlagsProject --> BuildFeatureFlagsSh
     VersionAProject --> BuildWarsSh
     VersionBProject --> BuildWarsSh
 
-    %% Relaciones de despliegue
     DeployWarSh --> WebLogicContainer
     FeatureFlagsWar --> DeployWarSh
     FF4JSimpleWar --> DeployWarSh
+    WebLogicFeaturesAWar --> DeployWarSh
+    WebLogicFeaturesBWar --> DeployWarSh
+    
+    classDef docker fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef build fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef deploy fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef container fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef war fill:#ffebee,stroke:#d32f2f,stroke-width:2px
+    classDef source fill:#e0f2f1,stroke:#00695c,stroke-width:2px
+    
+    class Docker,WebLogicContainer docker
+    class BuildSh,BuildWarsSh,BuildFeatureFlagsSh,CreateSimpleWarsSh build
+    class DeployWarSh,SetupCanarySh,CanaryControlSh,TestCanarySh deploy
+    class ContainerCanaryControlSh,SetupMonitoringSh,StartSampleSh container
+    class FeatureFlagsWar,FF4JSimpleWar,WebLogicFeaturesAWar,WebLogicFeaturesBWar war
+    class FeatureFlagsProject,VersionAProject,VersionBProject source
+```
     WebLogicFeaturesAWar --> DeployWarSh
     WebLogicFeaturesBWar --> DeployWarSh
 

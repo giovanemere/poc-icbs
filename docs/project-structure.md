@@ -21,7 +21,7 @@ graph TD
     BackupFiles --> DeployWeblogicBak[deploy-weblogic.sh.bak]
     BackupFiles --> DeployBak[deploy.sh.bak]
     
-    Config --> ConfigFiles[Archivos de configuración]
+    Config --> ConfigFiles[Archivos de configuracion]
     ConfigFiles --> DockerCompose[docker-compose.yml]
     ConfigFiles --> DockerComposeEE[docker-compose-EE.yml]
     ConfigFiles --> DemoOracleDDL[demo_oracle.ddl]
@@ -38,12 +38,12 @@ graph TD
     
     Docker --> Dockerfile[Dockerfile]
     
-    Docs --> DocsFiles[Archivos de documentación]
+    Docs --> DocsFiles[Archivos de documentacion]
     DocsFiles --> Arquitectura[arquitectura.md]
     DocsFiles --> CanaryFlow[canary-flow.md]
     DocsFiles --> ProjectStructure[project-structure.md]
     
-    Install --> InstallFiles[Archivos de instalación]
+    Install --> InstallFiles[Archivos de instalacion]
     InstallFiles --> WebLogicZip[fmw_14.1.1.0.0_wls_Disk1_1of1.zip]
     InstallFiles --> SQLCLZip[sqlcl-25.2.2.199.0918.zip]
     
@@ -78,6 +78,13 @@ graph TD
     classDef file fill:#e8f4ea,stroke:#333,stroke-width:1px
     classDef script fill:#e6f3ff,stroke:#333,stroke-width:1px
     classDef war fill:#ffe6e6,stroke:#333,stroke-width:1px
+    
+    class Root,Autodeploy,Backup,Config,ContainerScripts,Deploy,Docker,Docs,Images,Install,References,Scripts,WarProjects directory
+    class BackupFiles,ConfigFiles,DocsFiles,InstallFiles,RefsFiles,BuildScripts,DeployScripts,CanaryScripts directory
+    class DeployWeblogicBak,DeployBak,DockerCompose,DockerComposeEE,DemoOracleDDL,K8sYaml,Dockerfile,Arquitectura,CanaryFlow,ProjectStructure,WebLogicZip,SQLCLZip,CanaryDeployment,FF4JIntegration,WebLogicCommands file
+    class CS1,CS2,CS3,BS1,BS2,BS3,BS4,DS1,DS2,CS1_1,CS1_2,CS1_3,CS1_4,CS1_5,RunSh,SetupSh script
+    class D1,D2,D3,D4,WP1,WP2,WP3 war
+```
     classDef config fill:#fff2cc,stroke:#333,stroke-width:1px
     classDef install fill:#e6ccff,stroke:#333,stroke-width:1px
     
