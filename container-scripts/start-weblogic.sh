@@ -15,49 +15,31 @@ echo "Build Date: ${BUILD_DATE:-unknown}"
 # Configurar variables de entorno
 export DOMAIN_HOME="/u01/oracle/user_projects/domains/base_domain"
 export ADMIN_URL="t3://localhost:7001"
+export ADMIN_USERNAME="${ADMIN_USER:-weblogic}"
+export ADMIN_PASSWORD="${ADMIN_PASSWORD:-welcome1}"
+
+echo "Usando dominio preexistente en: $DOMAIN_HOME"
 
 # Crear directorios necesarios
 mkdir -p "$DOMAIN_HOME/servers/AdminServer/logs"
+mkdir -p "$DOMAIN_HOME/servers/AdminServer/security"
 mkdir -p "/u01/oracle/logs/weblogic-monitoring"
 
+# Crear archivo boot.properties con las credenciales correctas
+echo "username=$ADMIN_USERNAME" > "$DOMAIN_HOME/servers/AdminServer/security/boot.properties"
+echo "password=$ADMIN_PASSWORD" >> "$DOMAIN_HOME/servers/AdminServer/security/boot.properties"
+
 # Configurar permisos
-chown -R oracle:oracle "$DOMAIN_HOME/servers/AdminServer/logs"
-chown -R oracle:oracle "/u01/oracle/logs/weblogic-monitoring"
-chmod -R 775 "$DOMAIN_HOME/servers/AdminServer/logs"
+chown -R oracle:oracle "$DOMAIN_HOME" 2>/dev/null || true
+chown -R oracle:oracle "/u01/oracle/logs/weblogic-monitoring" 2>/dev/null || true
+chmod 600 "$DOMAIN_HOME/servers/AdminServer/security/boot.properties"
 
 echo "Cambiando al directorio del dominio: $DOMAIN_HOME"
 cd "$DOMAIN_HOME"
 
-# Verificar que el dominio existe
-if [ ! -f "$DOMAIN_HOME/bin/startWebLogic.sh" ]; then
-    echo "Error: No se encontró el script de inicio de WebLogic en $DOMAIN_HOME/bin/startWebLogic.sh"
-    exit 1
-fi
+# Asegurar que se inicie como AdminServer, no como servidor gestionado
+unset ADMIN_URL
+export SERVER_NAME=AdminServer
 
-echo "Iniciando WebLogic Server en segundo plano..."
-nohup ./bin/startWebLogic.sh > /u01/oracle/logs/weblogic-monitoring/weblogic-startup.log 2>&1 &
-
-# Esperar un momento para que WebLogic inicie
-sleep 10
-
-echo "Configurando monitoreo..."
-if [ -f "/u01/oracle/container-scripts/setup-monitoring.sh" ]; then
-    /u01/oracle/container-scripts/setup-monitoring.sh &
-else
-    echo "Advertencia: No se encontró setup-monitoring.sh"
-fi
-
-echo "Configurando health check..."
-if [ -f "/u01/oracle/container-scripts/health-check.sh" ]; then
-    /u01/oracle/container-scripts/health-check.sh &
-else
-    echo "Advertencia: No se encontró health-check.sh"
-fi
-
-echo "WebLogic Server iniciado. Manteniendo contenedor activo..."
-echo "Logs disponibles en:"
-echo "  - Startup: /u01/oracle/logs/weblogic-monitoring/weblogic-startup.log"
-echo "  - Server: $DOMAIN_HOME/servers/AdminServer/logs/"
-
-# Mantener el contenedor ejecutándose
-tail -f /dev/null
+echo "Iniciando WebLogic Server como AdminServer..."
+exec ./bin/startWebLogic.sh

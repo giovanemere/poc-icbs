@@ -47,6 +47,15 @@ echo -e "${NC}"
 # Cambiar al directorio correcto
 cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic
 
+# Cargar variables de entorno
+if [ -f .env ]; then
+    log "Cargando variables de entorno desde .env"
+    export $(grep -v '^#' .env | xargs)
+else
+    error "Archivo .env no encontrado"
+    exit 1
+fi
+
 # =============================================================================
 # FASE 1: DETECTAR ESTADO DE LOS SERVICIOS
 # =============================================================================

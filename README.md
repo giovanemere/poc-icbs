@@ -131,6 +131,44 @@ cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./scripts/buil
 cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic && ./build-latest.sh
 ```
 
+### **Desplegar Aplicaciones WAR**
+```bash
+# Desplegar automáticamente todas las aplicaciones
+cd /home/giovanemere/periferia/icbs/docker-for-oracle-weblogic
+
+# Copiar aplicaciones a WebLogic A
+docker cp deploy/version-a.war weblogic-a-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+docker cp deploy/feature-flags.war weblogic-a-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+docker cp deploy/ff4j-simple.war weblogic-a-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+docker cp deploy/weblogic-features-a.war weblogic-a-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+
+# Copiar aplicaciones a WebLogic B
+docker cp deploy/version-b.war weblogic-b-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+docker cp deploy/feature-flags.war weblogic-b-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+docker cp deploy/ff4j-simple.war weblogic-b-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+docker cp deploy/weblogic-features-b.war weblogic-b-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+```
+
+### **Aplicaciones Desplegadas**
+
+#### **WebLogic A (Puerto 7001):**
+- ✅ `version-a` - http://localhost:7001/version-a/
+- ✅ `feature-flags` - http://localhost:7001/feature-flags/
+- ✅ `ff4j-simple` - http://localhost:7001/ff4j-simple/
+- ✅ `weblogic-features-a` - http://localhost:7001/weblogic-features-a/
+
+#### **WebLogic B (Puerto 7002):**
+- ✅ `version-b` - http://localhost:7002/version-b/
+- ✅ `feature-flags` - http://localhost:7002/feature-flags/
+- ✅ `ff4j-simple` - http://localhost:7002/ff4j-simple/
+- ✅ `weblogic-features-b` - http://localhost:7002/weblogic-features-b/
+
+#### **A través de HAProxy (Puerto 8100) - Con Balanceo de Carga:**
+- ✅ `version-a` - http://localhost:8100/version-a/ → WebLogic A
+- ✅ `version-b` - http://localhost:8100/version-b/ → WebLogic B
+- ✅ `feature-flags` - http://localhost:8100/feature-flags/ → Balanceado A/B
+- ✅ `ff4j-simple` - http://localhost:8100/ff4j-simple/ → Balanceado A/B
+
 ### **Subir MkDocs para Desarrollo**
 ```bash
 # Opción 1: Navegar al directorio del proyecto de documentación
@@ -168,6 +206,31 @@ mkdocs serve --dev-addr=0.0.0.0:8000 --livereload
 | `./check-images.sh` | Verifica imágenes Docker disponibles | Troubleshooting |
 | `./scripts/build/build-wars.sh` | Construye archivos WAR | Desarrollo |
 | `./build-latest.sh` | Construye imágenes Docker | Desarrollo |
+
+## 🆕 Cambios Recientes (v2.2.0)
+
+### **Correcciones Críticas y Mejoras:**
+- ✅ **Corrección de inicio de WebLogic** - Solucionado problema de configuración como servidor gestionado
+- ✅ **Despliegue completo de aplicaciones WAR** en ambos nodos WebLogic A y B
+- ✅ **Configuración HAProxy corregida** para routing correcto a backends WebLogic
+- ✅ **Balanceo de carga funcional** entre WebLogic A y B
+- ✅ **Carga automática de variables .env** en scripts de inicio
+- ✅ **Configuración de red Docker simplificada** sin parámetros external problemáticos
+
+### **Aplicaciones Desplegadas y Funcionando:**
+- ✅ **version-a**: http://localhost:8100/version-a/ → WebLogic A
+- ✅ **version-b**: http://localhost:8100/version-b/ → WebLogic B  
+- ✅ **feature-flags**: http://localhost:8100/feature-flags/ → Balanceado A/B
+- ✅ **ff4j-simple**: http://localhost:8100/ff4j-simple/ → Balanceado A/B
+- ✅ **weblogic-features-a/b**: Aplicaciones específicas por nodo
+
+### **Sistema Completamente Funcional:**
+- ✅ **Oracle Database**: Puerto 1521/5500 (healthy)
+- ✅ **WebLogic A**: Puerto 7001 (running)
+- ✅ **WebLogic B**: Puerto 7002 (running)
+- ✅ **HAProxy**: Puerto 8100 con balanceo real
+- ✅ **Dashboards**: Puertos 8084, 8085, 8092, 8093 (todos funcionando)
+- ✅ **Estadísticas HAProxy**: http://localhost:8404/stats (admin/admin123)
 
 ## 🎯 Flujo de Trabajo Recomendado
 
@@ -318,23 +381,56 @@ Si HAProxy falla, estos dashboards independientes siguen funcionando:
 - `http://localhost:8092/index-functional.html`
 - `http://localhost:8093/api/health`
 
-### Aplicaciones no disponibles (Error 503)
+### **Problemas de Despliegue de Aplicaciones**
 
-Si recibes errores 503 al acceder a las aplicaciones:
+Si las aplicaciones no están disponibles:
 
-1. Verifica que los contenedores estén en ejecución:
+1. **Verificar que los contenedores estén corriendo:**
    ```bash
-   docker-compose -f config/docker-compose.yml ps
+   docker ps | grep weblogic
    ```
 
-2. Verifica que las aplicaciones WAR estén desplegadas:
+2. **Verificar que las aplicaciones WAR estén desplegadas:**
    ```bash
-   ./scripts/build/build-wars.sh
+   docker exec weblogic-a-main ls -la /u01/oracle/user_projects/domains/base_domain/autodeploy/
+   docker exec weblogic-b-main ls -la /u01/oracle/user_projects/domains/base_domain/autodeploy/
    ```
 
-3. Si necesitas forzar un redespliegue limpio:
+3. **Redesplegar aplicaciones manualmente:**
+   ```bash
+   # Para WebLogic A
+   docker cp deploy/version-a.war weblogic-a-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+   docker cp deploy/feature-flags.war weblogic-a-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+   
+   # Para WebLogic B
+   docker cp deploy/version-b.war weblogic-b-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+   docker cp deploy/feature-flags.war weblogic-b-main:/u01/oracle/user_projects/domains/base_domain/autodeploy/
+   ```
+
+4. **Verificar logs de WebLogic:**
+   ```bash
+   docker logs --tail 20 weblogic-a-main
+   docker logs --tail 20 weblogic-b-main
+   ```
+
+### **Problemas de Configuración de Red**
+
+Si hay errores de red en docker-compose:
+
+1. **Verificar archivo .env:**
+   ```bash
+   cat .env | grep -E "(NETWORK|EXTERNAL)"
+   ```
+
+2. **Limpiar redes Docker:**
+   ```bash
+   docker network prune -f
+   ```
+
+3. **Reiniciar con configuración limpia:**
    ```bash
    ./stop.sh
+   docker system prune -f
    ./start.sh
    ```
 

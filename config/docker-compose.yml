@@ -1,8 +1,9 @@
 version: '3.8'
 
 # =============================================================================
-# Docker Compose Completo - Con Dashboards Integrados
+# Docker Compose Completo - Con Dashboards Integrados + RED COMPARTIDA
 # Proyecto: Oracle WebLogic con Testing A/B, Canary Deployment y Feature Flags
+# TODAS las variables vienen del archivo .env - SIN valores hardcodeados
 # =============================================================================
 
 services:
@@ -11,29 +12,28 @@ services:
   # =============================================================================
   orcldb:
     image: edissonz8809/oracle-express-db:latest
-    container_name: orcldb-integrated
-    hostname: oracle-db
+    container_name: ${IAOPS_ORACLE_CONTAINER}
+    hostname: ${ORACLE_HOSTNAME}
     ports:
       - "${EXTERNAL_ORACLE_PORT:-1521}:1521"
       - "${EXTERNAL_ORACLE_EM_PORT:-5500}:5500"
     environment:
-      - ORACLE_PWD=${ORACLE_PWD:-welcome1}
-      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
-      - ORACLE_PDB=${ORACLE_PDB:-ORCLPDB1}
-      - ORACLE_CHARACTERSET=${ORACLE_CHARACTERSET:-AL32UTF8}
+      - ORACLE_PWD=${ORACLE_PWD}
+      - ORACLE_SID=${ORACLE_SID}
+      - ORACLE_PDB=${ORACLE_PDB}
+      - ORACLE_CHARACTERSET=${ORACLE_CHARACTERSET}
+      - TZ=${TZ}
     volumes:
       - oracle-data:/opt/oracle/oradata
       - ../oracle/scripts/setup:/opt/oracle/scripts/setup:ro
       - ../oracle/scripts/startup:/opt/oracle/scripts/startup:ro
       - oracle-logs:/opt/oracle/diag
     networks:
-      weblogic-network:
-        aliases:
-          - oracle-db
-          - database
+      - weblogic-integrated-network
+      - iaops-shared-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_PWD:-welcome1}@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
+      test: ["CMD", "sqlplus", "-L", "system/${ORACLE_PWD}@//localhost:1521/XE", "AS", "SYSDBA", "SELECT", "1", "FROM", "DUAL"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -43,20 +43,31 @@ services:
   # WebLogic Server A (Versión Estable)
   # =============================================================================
   weblogic-a:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_ENV: version-a
+        VERSION: A
+        APP_VERSION: ${APP_VERSION_A}
+        BUILD_DATE: "${BUILD_DATE}"
+        BUILD_VERSION: "${APP_VERSION_A}"
+        BUILD_COMMIT: "${BUILD_COMMIT}"
     image: weblogic-version-a:latest
-    container_name: weblogic-a-integrated
-    hostname: weblogic-a
+    container_name: ${IAOPS_WEBLOGIC_A_CONTAINER}
+    hostname: ${WEBLOGIC_A_HOSTNAME}
     environment:
-      - ADMIN_PASSWORD=${WEBLOGIC_A_ADMIN_PASSWORD:-welcome1}
-      - ADMIN_USER=${WEBLOGIC_A_ADMIN_USER:-weblogic}
-      - DOMAIN_NAME=${WEBLOGIC_A_DOMAIN_NAME:-base_domain_a}
+      - ADMIN_PASSWORD=${WEBLOGIC_A_ADMIN_PASSWORD}
+      - ADMIN_USER=${WEBLOGIC_A_ADMIN_USER}
+      - DOMAIN_NAME=${WEBLOGIC_A_DOMAIN_NAME}
       - VERSION=A
-      - APP_VERSION=${APP_VERSION_A:-1.0.0}
-      - ORACLE_HOST=oracle-db
+      - APP_VERSION=${APP_VERSION_A}
+      - ORACLE_HOST=${ORACLE_HOSTNAME}
       - ORACLE_PORT=1521
-      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
-      - ORACLE_USER=${ORACLE_USER:-system}
-      - ORACLE_PASSWORD=${ORACLE_PWD:-welcome1}
+      - ORACLE_SID=${ORACLE_SID}
+      - ORACLE_USER=${ORACLE_USER}
+      - ORACLE_PASSWORD=${ORACLE_PWD}
+      - TZ=${TZ}
     volumes:
       - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
       - ../deploy:/u01/oracle/deploy:rw
@@ -64,12 +75,10 @@ services:
       - weblogic-a-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
       - weblogic-a-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
     networks:
-      weblogic-network:
-        aliases:
-          - weblogic-a
-          - weblogic-stable
+      - weblogic-integrated-network
+      - iaops-shared-network
     ports:
-      - "${EXTERNAL_WEBLOGIC_A_PORT:-7001}:7001"
+      - "${EXTERNAL_WEBLOGIC_A_PORT}:7001"
     depends_on:
       orcldb:
         condition: service_healthy
@@ -85,20 +94,31 @@ services:
   # WebLogic Server B (Versión Canary/Beta)
   # =============================================================================
   weblogic-b:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        BUILD_ENV: version-b
+        VERSION: B
+        APP_VERSION: ${APP_VERSION_B}
+        BUILD_DATE: "${BUILD_DATE}"
+        BUILD_VERSION: "${APP_VERSION_B}"
+        BUILD_COMMIT: "${BUILD_COMMIT}"
     image: weblogic-version-b:latest
-    container_name: weblogic-b-integrated
-    hostname: weblogic-b
+    container_name: ${IAOPS_WEBLOGIC_B_CONTAINER}
+    hostname: ${WEBLOGIC_B_HOSTNAME}
     environment:
-      - ADMIN_PASSWORD=${WEBLOGIC_B_ADMIN_PASSWORD:-welcome1}
-      - ADMIN_USER=${WEBLOGIC_B_ADMIN_USER:-weblogic}
-      - DOMAIN_NAME=${WEBLOGIC_B_DOMAIN_NAME:-base_domain_b}
+      - ADMIN_PASSWORD=${WEBLOGIC_B_ADMIN_PASSWORD}
+      - ADMIN_USER=${WEBLOGIC_B_ADMIN_USER}
+      - DOMAIN_NAME=${WEBLOGIC_B_DOMAIN_NAME}
       - VERSION=B
-      - APP_VERSION=${APP_VERSION_B:-2.0.0-beta}
-      - ORACLE_HOST=oracle-db
+      - APP_VERSION=${APP_VERSION_B}
+      - ORACLE_HOST=${ORACLE_HOSTNAME}
       - ORACLE_PORT=1521
-      - ORACLE_SID=${ORACLE_SID:-ORCLCDB}
-      - ORACLE_USER=${ORACLE_USER:-system}
-      - ORACLE_PASSWORD=${ORACLE_PWD:-welcome1}
+      - ORACLE_SID=${ORACLE_SID}
+      - ORACLE_USER=${ORACLE_USER}
+      - ORACLE_PASSWORD=${ORACLE_PWD}
+      - TZ=${TZ}
     volumes:
       - ../autodeploy:/u01/oracle/user_projects/domains/base_domain/autodeploy:rw
       - ../deploy:/u01/oracle/deploy:rw
@@ -106,12 +126,10 @@ services:
       - weblogic-b-logs:/u01/oracle/user_projects/domains/base_domain/servers/AdminServer/logs:rw
       - weblogic-b-monitoring:/u01/oracle/logs/weblogic-monitoring:rw
     networks:
-      weblogic-network:
-        aliases:
-          - weblogic-b
-          - weblogic-canary
+      - weblogic-integrated-network
+      - iaops-shared-network
     ports:
-      - "${EXTERNAL_WEBLOGIC_B_PORT:-7002}:7001"
+      - "${EXTERNAL_WEBLOGIC_B_PORT}:7001"
     depends_on:
       orcldb:
         condition: service_healthy
@@ -127,34 +145,36 @@ services:
   # HAProxy Load Balancer
   # =============================================================================
   haproxy:
+    build:
+      context: ../haproxy
+      dockerfile: Dockerfile
     image: haproxy-advanced:latest
-    container_name: haproxy-integrated
-    hostname: haproxy
+    container_name: ${IAOPS_HAPROXY_CONTAINER}
+    hostname: ${HAPROXY_HOSTNAME}
     ports:
-      - "${EXTERNAL_HTTP_PORT:-8100}:80"      # Frontend Principal
-      - "${EXTERNAL_HTTPS_PORT:-8443}:443"    # HTTPS Frontend
-      - "${EXTERNAL_STATS_PORT:-8404}:8404"   # HAProxy Stats
-      - "${EXTERNAL_API_PORT:-8081}:8081"     # API de administración
-      - "${EXTERNAL_UI_PORT:-8082}:8082"      # UI de administración
+      - "${EXTERNAL_HTTP_PORT}:80"      # Frontend Principal
+      - "${EXTERNAL_HTTPS_PORT}:443"    # HTTPS Frontend
+      - "${EXTERNAL_STATS_PORT}:8404"   # HAProxy Stats
+      - "${EXTERNAL_API_PORT}:8081"     # API de administración
+      - "${EXTERNAL_UI_PORT}:8082"      # UI de administración
     environment:
-      - HAPROXY_STATS_USER=${HAPROXY_STATS_USER:-admin}
-      - HAPROXY_STATS_PASSWORD=${HAPROXY_STATS_PASSWORD:-admin123}
-      - DEFAULT_STRATEGY=${DEFAULT_STRATEGY:-roundrobin}
-      - DEFAULT_WEIGHT_A=${DEFAULT_WEIGHT_A:-50}
-      - DEFAULT_WEIGHT_B=${DEFAULT_WEIGHT_B:-50}
-      - WEBLOGIC_A_HOST=weblogic-a
-      - WEBLOGIC_B_HOST=weblogic-b
+      - HAPROXY_STATS_USER=${HAPROXY_STATS_USER}
+      - HAPROXY_STATS_PASSWORD=${HAPROXY_STATS_PASSWORD}
+      - DEFAULT_STRATEGY=${DEFAULT_STRATEGY}
+      - DEFAULT_WEIGHT_A=${DEFAULT_WEIGHT_A}
+      - DEFAULT_WEIGHT_B=${DEFAULT_WEIGHT_B}
+      - WEBLOGIC_A_HOST=${WEBLOGIC_A_HOSTNAME}
+      - WEBLOGIC_B_HOST=${WEBLOGIC_B_HOSTNAME}
       - WEBLOGIC_A_PORT=7001
       - WEBLOGIC_B_PORT=7001
+      - TZ=${TZ}
     volumes:
       - ../haproxy/config:/usr/local/etc/haproxy:z
       - ../haproxy/scripts:/scripts:z
       - ../haproxy/config/certs:/etc/ssl/certs:z
     networks:
-      weblogic-network:
-        aliases:
-          - haproxy
-          - loadbalancer
+      - weblogic-integrated-network
+      - iaops-shared-network
     depends_on:
       weblogic-a:
         condition: service_healthy
@@ -173,18 +193,19 @@ services:
   # =============================================================================
   unified-dashboard:
     image: nginx:alpine
-    container_name: unified-dashboard
-    hostname: unified-dashboard
+    container_name: ${IAOPS_UNIFIED_DASHBOARD_CONTAINER}
+    hostname: ${UNIFIED_DASHBOARD_HOSTNAME}
     ports:
       - "8085:80"
+    environment:
+      - TZ=${TZ}
     volumes:
       - ../unified-dashboard-fixed.html:/usr/share/nginx/html/index.html:ro
       - ../unified-dashboard-fixed.html:/usr/share/nginx/html/unified-dashboard-fixed.html:ro
       - ../unified-dashboard.html:/usr/share/nginx/html/unified-dashboard.html:ro
     networks:
-      weblogic-network:
-        aliases:
-          - unified-dashboard
+      - weblogic-integrated-network
+      - iaops-shared-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
@@ -197,18 +218,19 @@ services:
   # =============================================================================
   traffic-dashboard:
     image: python:3.9-alpine
-    container_name: traffic-dashboard
-    hostname: traffic-dashboard
+    container_name: ${IAOPS_TRAFFIC_DASHBOARD_CONTAINER}
+    hostname: ${TRAFFIC_DASHBOARD_HOSTNAME}
     ports:
       - "8084:8084"
     working_dir: /app
     command: sh -c "pip install flask flask-cors requests && python real-traffic-api.py"
+    environment:
+      - TZ=${TZ}
     volumes:
       - ../haproxy/dashboard:/app:rw
     networks:
-      weblogic-network:
-        aliases:
-          - traffic-dashboard
+      - weblogic-integrated-network
+      - iaops-shared-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8084/api/health"]
@@ -221,16 +243,17 @@ services:
   # =============================================================================
   haproxy-admin-panel:
     image: nginx:alpine
-    container_name: haproxy-admin-panel
-    hostname: haproxy-admin-panel
+    container_name: ${IAOPS_HAPROXY_ADMIN_CONTAINER}
+    hostname: ${HAPROXY_ADMIN_HOSTNAME}
     ports:
       - "8092:80"
+    environment:
+      - TZ=${TZ}
     volumes:
       - ../haproxy/admin-panel:/usr/share/nginx/html:ro
     networks:
-      weblogic-network:
-        aliases:
-          - haproxy-admin-panel
+      - weblogic-integrated-network
+      - iaops-shared-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
@@ -243,16 +266,17 @@ services:
   # =============================================================================
   admin-api:
     image: nginx:alpine
-    container_name: admin-api
-    hostname: admin-api
+    container_name: ${IAOPS_ADMIN_API_CONTAINER}
+    hostname: ${ADMIN_API_HOSTNAME}
     ports:
       - "8093:80"
+    environment:
+      - TZ=${TZ}
     volumes:
       - ../admin-api:/usr/share/nginx/html:ro
     networks:
-      weblogic-network:
-        aliases:
-          - admin-api
+      - weblogic-integrated-network
+      - iaops-shared-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
@@ -261,40 +285,46 @@ services:
       retries: 3
 
 # =============================================================================
-# Redes
+# REDES - HOMOLOGADAS CON IA-OPS
 # =============================================================================
 networks:
-  weblogic-network:
+  # Red interna de WebLogic
+  weblogic-integrated-network:
     driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: weblogic-br
-    ipam:
-      driver: default
-      config:
-        - subnet: ${SUBNET:-172.25.0.0/16}
-          gateway: ${GATEWAY:-172.25.0.1}
+    name: ${DOCKER_NETWORK_NAME}
     labels:
-      - "project=weblogic-integrated"
-      - "environment=${ENVIRONMENT:-development}"
+      - "project=${PROJECT_NAME}"
+      - "environment=${ENVIRONMENT}"
+
+  # RED COMPARTIDA PARA CONECTAR CON OTROS SERVICIOS IA-OPS
+  iaops-shared-network:
+    driver: bridge
+    name: ${IAOPS_SHARED_NETWORK_NAME}
 
 # =============================================================================
-# Volúmenes
+# VOLÚMENES PERSISTENTES - COMPLETAMENTE DINÁMICOS
 # =============================================================================
 volumes:
   # Oracle Database
   oracle-data:
     driver: local
+    name: ${ORACLE_DATA_VOLUME}
   oracle-logs:
     driver: local
+    name: ${ORACLE_LOGS_VOLUME}
 
   # WebLogic A
   weblogic-a-logs:
     driver: local
+    name: ${WEBLOGIC_A_LOGS_VOLUME}
   weblogic-a-monitoring:
     driver: local
+    name: ${WEBLOGIC_A_MONITORING_VOLUME}
 
   # WebLogic B
   weblogic-b-logs:
     driver: local
+    name: ${WEBLOGIC_B_LOGS_VOLUME}
   weblogic-b-monitoring:
     driver: local
+    name: ${WEBLOGIC_B_MONITORING_VOLUME}
